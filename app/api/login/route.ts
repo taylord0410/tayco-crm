@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+const USERS = [
+  { username: 'LISELOT', password: 'Alejandrina0720$$$' },
+  { username: 'JoseA',   password: 'Alejandrina0720$$$' },
+]
+
 export async function POST(req: NextRequest) {
   const { username, password } = await req.json()
 
-  const correctUsername = process.env.CRM_USERNAME || 'LISELOT'
-  const correctPassword = process.env.CRM_PASSWORD || 'Alejandrina0720$$$'
+  const validUser = USERS.find(
+    u => u.username === username && u.password === password
+  )
 
-  if (username !== correctUsername || password !== correctPassword) {
+  if (!validUser) {
     return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 })
   }
 
