@@ -55,6 +55,7 @@ export default function Registro() {
   })
   const [w9File, setW9File] = useState<File | null>(null)
   const [certFile, setCertFile] = useState<File | null>(null)
+  const [workPhotos, setWorkPhotos] = useState<File[]>([])
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uploadStatus, setUploadStatus] = useState('')
@@ -101,6 +102,17 @@ export default function Registro() {
         certUrl = await uploadFile(certFile, 'insurance')
       }
 
+      let photoUrls: string[] = []
+      if (workPhotos.length > 0) {
+        setUploadStatus(`Uploading work photos (0/${workPhotos.length})...`)
+        photoUrls = await Promise.all(
+          workPhotos.map(async (photo, i) => {
+            setUploadStatus(`Uploading work photos (${i + 1}/${workPhotos.length})...`)
+            return uploadFile(photo, `photo-${i + 1}`)
+          })
+        )
+      }
+
       setUploadStatus('Saving your information...')
 
       const notes = [
@@ -109,6 +121,7 @@ export default function Registro() {
         form.hasInsurance === 'yes' ? 'Has insurance: YES' : 'Has insurance: NO',
         w9Url ? `W9 Document: ${w9Url}` : '',
         certUrl ? `Insurance Certificate: ${certUrl}` : '',
+        photoUrls.length > 0 ? `Work Photos:\n${photoUrls.map((u, i) => `  Photo ${i + 1}: ${u}`).join('\n')}` : '',
         form.generalNotes,
       ].filter(Boolean).join('\n')
 
@@ -291,6 +304,44 @@ export default function Registro() {
                 onChange={setCertFile} />
             </div>
             <p className="text-xs text-gray-400 mt-2">Documents are optional but required before starting any project with us.</p>
+          </div>
+
+          {/* Work Photos */}
+          <div>
+            <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Recent Work Photos <span className="text-gray-400 font-normal normal-case">(up to 5)</span></h3>
+            <div
+              onClick={() => document.getElementById('photo-input')?.click()}
+              className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
+            >
+              <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-sm text-gray-500">Click to upload photos of your recent work</p>
+              <p className="text-xs text-gray-400 mt-1">JPG, PNG — max 5 photos</p>
+            </div>
+            <input
+              id="photo-input"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={e => {
+                const files = Array.from(e.target.files ?? []).slice(0, 5)
+                setWorkPhotos(files)
+              }}
+            />
+            {workPhotos.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {workPhotos.map((f, i) => (
+                  <div key={i} className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
+                    <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <span className="text-xs text-green-700 font-medium">{f.name}</span>
+                    <button type="button" onClick={() => setWorkPhotos(p => p.filter((_, j) => j !== i))}
+                      className="text-green-400 hover:text-red-500 ml-1 text-xs">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Notes */}
