@@ -48,11 +48,11 @@ export default function Registro() {
     crewSize: '',
     yearsExperience: '',
     trades: [] as string[],
-    otherTrade: '',
     citiesServed: '',
     hasInsurance: '' as 'yes' | 'no' | '',
     generalNotes: '',
   })
+  const [otherTrade, setOtherTrade] = useState('')
   const [w9File, setW9File] = useState<File | null>(null)
   const [workPhotos, setWorkPhotos] = useState<File[]>([])
   const [submitted, setSubmitted] = useState(false)
@@ -69,6 +69,13 @@ export default function Registro() {
       ...p,
       trades: p.trades.includes(trade) ? p.trades.filter(t => t !== trade) : [...p.trades, trade],
     }))
+  }
+
+  function addOtherTrade() {
+    const val = otherTrade.trim()
+    if (!val || form.trades.includes(val)) return
+    setForm(p => ({ ...p, trades: [...p.trades, val] }))
+    setOtherTrade('')
   }
 
   async function uploadFile(file: File, name: string): Promise<string> {
@@ -111,7 +118,6 @@ export default function Registro() {
 
       const notes = [
         form.yearsExperience ? `Years of experience: ${form.yearsExperience}` : '',
-        form.otherTrade ? `Other trade/specialty: ${form.otherTrade}` : '',
         form.hasInsurance === 'yes' ? 'Has insurance: YES' : 'Has insurance: NO',
         w9Url ? `W9 Document: ${w9Url}` : '',
         photoUrls.length > 0 ? `Work Photos:\n${photoUrls.map((u, i) => `  Photo ${i + 1}: ${u}`).join('\n')}` : '',
@@ -248,18 +254,36 @@ export default function Registro() {
               ))}
             </div>
 
-            {/* Other trade text field */}
-            <div className="mt-3">
+            {/* Other trade */}
+            <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Don&apos;t see your trade? Describe it here:
+                Don&apos;t see your trade? Type it and press <strong>+</strong>
               </label>
-              <input
-                type="text"
-                placeholder="e.g. Solar Panel Installation, Landscaping, Plumbing..."
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={form.otherTrade}
-                onChange={e => set('otherTrade', e.target.value)}
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. Solar Panel Installation, Plumbing..."
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={otherTrade}
+                  onChange={e => setOtherTrade(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addOtherTrade() } }}
+                />
+                <button
+                  type="button"
+                  onClick={addOtherTrade}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 rounded-lg text-lg transition-colors"
+                >+</button>
+              </div>
+              {form.trades.filter(t => !['Cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Other'].includes(t)).length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {form.trades.filter(t => !['Cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Other'].includes(t)).map((t, i) => (
+                    <span key={i} className="flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-3 py-1 rounded-lg">
+                      {t}
+                      <button type="button" onClick={() => setForm(p => ({ ...p, trades: p.trades.filter(x => x !== t) }))} className="hover:text-red-200 text-white ml-0.5">✕</button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
