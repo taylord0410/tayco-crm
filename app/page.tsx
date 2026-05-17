@@ -354,7 +354,7 @@ export default function CRM() {
             <span className="font-semibold text-gray-900 text-lg">Tayco Operation System</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/solicitudes" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+            <Link href="/requests" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
               Vendor Requests
             </Link>
             <span className="text-xs text-gray-400">{new Date().toLocaleDateString('es-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
