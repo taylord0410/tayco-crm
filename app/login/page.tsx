@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 export default function Login() {
   const router = useRouter()
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,13 +18,13 @@ export default function Login() {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       })
       if (res.ok) {
         router.push('/')
         router.refresh()
       } else {
-        setError('Contraseña incorrecta')
+        setError('Usuario o contraseña incorrectos')
       }
     } finally {
       setLoading(false)
@@ -36,10 +37,21 @@ export default function Login() {
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-xl mb-4">T</div>
           <h1 className="text-2xl font-bold text-gray-900">Tayco CRM</h1>
-          <p className="text-sm text-gray-500 mt-1">Ingresa tu contraseña para continuar</p>
+          <p className="text-sm text-gray-500 mt-1">Ingresa tus credenciales para continuar</p>
         </div>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+            <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="Usuario"
+              required
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
             <input
