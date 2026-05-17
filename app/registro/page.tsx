@@ -48,6 +48,7 @@ export default function Registro() {
     crewSize: '',
     yearsExperience: '',
     trades: [] as string[],
+    otherTrade: '',
     citiesServed: '',
     hasInsurance: '' as 'yes' | 'no' | '',
     generalNotes: '',
@@ -104,6 +105,7 @@ export default function Registro() {
 
       const notes = [
         form.yearsExperience ? `Years of experience: ${form.yearsExperience}` : '',
+        form.otherTrade ? `Other trade/specialty: ${form.otherTrade}` : '',
         form.hasInsurance === 'yes' ? 'Has insurance: YES' : 'Has insurance: NO',
         w9Url ? `W9 Document: ${w9Url}` : '',
         certUrl ? `Insurance Certificate: ${certUrl}` : '',
@@ -238,6 +240,20 @@ export default function Registro() {
                   }`}
                 >{trade}</button>
               ))}
+            </div>
+
+            {/* Other trade text field */}
+            <div className="mt-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Don&apos;t see your trade? Describe it here:
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Solar Panel Installation, Landscaping, Plumbing..."
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={form.otherTrade}
+                onChange={e => set('otherTrade', e.target.value)}
+              />
             </div>
           </div>
 
