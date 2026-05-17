@@ -6,7 +6,8 @@ export function middleware(req: NextRequest) {
   const isApi = req.nextUrl.pathname.startsWith('/api')
 
   const isRegistro = req.nextUrl.pathname.startsWith('/registro')
-  if (isApi || isLoginPage || isRegistro) return NextResponse.next()
+  const isUpload = req.nextUrl.pathname.startsWith('/api/upload')
+  if (isApi || isLoginPage || isRegistro || isUpload) return NextResponse.next()
 
   if (!session) {
     return NextResponse.redirect(new URL('/login', req.url))

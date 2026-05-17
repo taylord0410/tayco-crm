@@ -1,8 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 const TRADES = ['Cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Other']
+
+function FileUpload({ label, name, accept, onChange }: { label: string; name: string; accept: string; onChange: (file: File | null) => void }) {
+  const ref = useRef<HTMLInputElement>(null)
+  const [fileName, setFileName] = useState('')
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <div
+        onClick={() => ref.current?.click()}
+        className="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
+      >
+        {fileName ? (
+          <div className="flex items-center justify-center gap-2 text-green-600">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+            <span className="text-sm font-medium">{fileName}</span>
+          </div>
+        ) : (
+          <div className="text-gray-400">
+            <svg className="w-8 h-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+            <p className="text-sm">Click to upload <span className="text-blue-500 font-medium">{label}</span></p>
+            <p className="text-xs mt-1">PDF, JPG, PNG accepted</p>
+          </div>
+        )}
+      </div>
+      <input ref={ref} type="file" accept={accept} className="hidden"
+        onChange={e => {
+          const f = e.target.files?.[0] ?? null
+          setFileName(f?.name ?? '')
+          onChange(f)
+        }}
+      />
+    </div>
+  )
+}
 
 export default function Registro() {
   const [form, setForm] = useState({
@@ -14,10 +49,14 @@ export default function Registro() {
     yearsExperience: '',
     trades: [] as string[],
     citiesServed: '',
+    hasInsurance: '' as 'yes' | 'no' | '',
     generalNotes: '',
   })
+  const [w9File, setW9File] = useState<File | null>(null)
+  const [certFile, setCertFile] = useState<File | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [uploadStatus, setUploadStatus] = useState('')
   const [error, setError] = useState('')
 
   function set(key: string, val: unknown) {
@@ -27,28 +66,65 @@ export default function Registro() {
   function toggleTrade(trade: string) {
     setForm(p => ({
       ...p,
-      trades: p.trades.includes(trade)
-        ? p.trades.filter(t => t !== trade)
-        : [...p.trades, trade],
+      trades: p.trades.includes(trade) ? p.trades.filter(t => t !== trade) : [...p.trades, trade],
     }))
+  }
+
+  async function uploadFile(file: File, name: string): Promise<string> {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('name', name)
+    const res = await fetch('/api/upload', { method: 'POST', body: fd })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error)
+    return data.url
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (form.trades.length === 0) { setError('Please select at least one trade.'); return }
+    if (!form.hasInsurance) { setError('Please indicate if you have insurance.'); return }
     setSaving(true)
     setError('')
+
     try {
-      const fields: Record<string, unknown> = {
-        'Business Name':          form.businessName,
-        'Primary Contact Name':   form.contactName,
-        'Contact Email':          form.contactEmail,
-        'Contact Phone':          form.contactPhone,
-        'Crew Size':              form.crewSize ? Number(form.crewSize) : undefined,
-        'Types of Work/Trades':   form.trades,
-        'Cities Served':          form.citiesServed,
-        'General Notes':          form.yearsExperience ? `Years of experience: ${form.yearsExperience}. ${form.generalNotes}` : form.generalNotes,
-        'Approval Status':        'Pending',
+      let w9Url = ''
+      let certUrl = ''
+
+      if (w9File) {
+        setUploadStatus('Uploading W9...')
+        w9Url = await uploadFile(w9File, 'w9')
       }
+      if (certFile) {
+        setUploadStatus('Uploading Insurance Certificate...')
+        certUrl = await uploadFile(certFile, 'insurance')
+      }
+
+      setUploadStatus('Saving your information...')
+
+      const notes = [
+        form.yearsExperience ? `Years of experience: ${form.yearsExperience}` : '',
+        form.hasInsurance === 'yes' ? 'Has insurance: YES' : 'Has insurance: NO',
+        w9Url ? `W9 Document: ${w9Url}` : '',
+        certUrl ? `Insurance Certificate: ${certUrl}` : '',
+        form.generalNotes,
+      ].filter(Boolean).join('\n')
+
+      const fields: Record<string, unknown> = {
+        'Business Name':         form.businessName,
+        'Primary Contact Name':  form.contactName,
+        'Contact Email':         form.contactEmail,
+        'Contact Phone':         form.contactPhone,
+        'Crew Size':             form.crewSize ? Number(form.crewSize) : undefined,
+        'Types of Work/Trades':  form.trades,
+        'Cities Served':         form.citiesServed,
+        'Insurance Verification': form.hasInsurance === 'yes' ? 'Pending' : 'Not Verified',
+        'W9 Status':             'Pending',
+        '1099 Status':           'Pending',
+        'Approval Status':       'Pending',
+        'General Notes':         notes,
+      }
+
       const res = await fetch('/api/airtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,6 +137,7 @@ export default function Registro() {
       setError((e as Error).message)
     } finally {
       setSaving(false)
+      setUploadStatus('')
     }
   }
 
@@ -73,8 +150,8 @@ export default function Registro() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Thank you!</h2>
-          <p className="text-gray-500">Your information has been submitted successfully. We will be in touch soon.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h2>
+          <p className="text-gray-500 mt-2">Thank you for registering with Tayco LLC. We have received your information and will be in touch soon.</p>
         </div>
       </div>
     )
@@ -84,20 +161,19 @@ export default function Registro() {
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-2xl mx-auto">
 
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">T</div>
           <h1 className="text-3xl font-bold text-gray-900">Join Our Network</h1>
-          <p className="text-gray-500 mt-2">Fill out the form below to register as a subcontractor with Tayco LLC.</p>
+          <p className="text-gray-500 mt-2">Register as a subcontractor with Tayco LLC. Fill out the form below to get started.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 flex flex-col gap-8">
 
           {/* Business Info */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Business Information</h3>
+            <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Business Information</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Business Name <span className="text-red-500">*</span></label>
                 <input required type="text" placeholder="Your company name"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -115,9 +191,9 @@ export default function Registro() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.crewSize} onChange={e => set('crewSize', e.target.value)} />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Cities Served <span className="text-red-500">*</span></label>
-                <input required type="text" placeholder="e.g. Los Angeles, San Diego"
+                <input required type="text" placeholder="e.g. Los Angeles, San Diego, Fresno"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.citiesServed} onChange={e => set('citiesServed', e.target.value)} />
               </div>
@@ -126,7 +202,7 @@ export default function Registro() {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Contact Information</h3>
+            <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Contact Information</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
@@ -151,7 +227,7 @@ export default function Registro() {
 
           {/* Trades */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Types of Work / Trades <span className="text-red-500">*</span></h3>
+            <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Types of Work / Trades <span className="text-red-500">*</span></h3>
             <div className="flex flex-wrap gap-2">
               {TRADES.map(trade => (
                 <button key={trade} type="button" onClick={() => toggleTrade(trade)}
@@ -163,25 +239,60 @@ export default function Registro() {
                 >{trade}</button>
               ))}
             </div>
-            {form.trades.length === 0 && <p className="text-xs text-gray-400 mt-2">Select at least one trade</p>}
+          </div>
+
+          {/* Insurance */}
+          <div>
+            <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Insurance</h3>
+            <label className="block text-sm font-medium text-gray-700 mb-3">Do you currently have General Liability Insurance? <span className="text-red-500">*</span></label>
+            <div className="flex gap-4">
+              <label className={`flex items-center gap-3 border-2 rounded-xl px-6 py-3 cursor-pointer transition-all ${form.hasInsurance === 'yes' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                <input type="radio" name="insurance" value="yes" className="hidden"
+                  checked={form.hasInsurance === 'yes'} onChange={() => set('hasInsurance', 'yes')} />
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.hasInsurance === 'yes' ? 'border-green-500 bg-green-500' : 'border-gray-300'}`}>
+                  {form.hasInsurance === 'yes' && <div className="w-2 h-2 rounded-full bg-white" />}
+                </div>
+                <span className="font-medium text-gray-800">Yes, I have insurance</span>
+              </label>
+              <label className={`flex items-center gap-3 border-2 rounded-xl px-6 py-3 cursor-pointer transition-all ${form.hasInsurance === 'no' ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                <input type="radio" name="insurance" value="no" className="hidden"
+                  checked={form.hasInsurance === 'no'} onChange={() => set('hasInsurance', 'no')} />
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.hasInsurance === 'no' ? 'border-red-400 bg-red-400' : 'border-gray-300'}`}>
+                  {form.hasInsurance === 'no' && <div className="w-2 h-2 rounded-full bg-white" />}
+                </div>
+                <span className="font-medium text-gray-800">No</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Document Uploads */}
+          <div>
+            <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Documents</h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FileUpload label="W9 Form" name="w9" accept=".pdf,.jpg,.jpeg,.png"
+                onChange={setW9File} />
+              <FileUpload label="Insurance Certificate" name="insurance" accept=".pdf,.jpg,.jpeg,.png"
+                onChange={setCertFile} />
+            </div>
+            <p className="text-xs text-gray-400 mt-2">Documents are optional but required before starting any project with us.</p>
           </div>
 
           {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Additional Information</label>
-            <textarea rows={3} placeholder="Any additional information about your business, certifications, equipment, etc."
+            <textarea rows={3} placeholder="Certifications, special equipment, references, anything else you'd like us to know..."
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={form.generalNotes} onChange={e => set('generalNotes', e.target.value)} />
           </div>
 
-          {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+          {error && <p className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg">{error}</p>}
 
-          <button type="submit" disabled={saving || form.trades.length === 0}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors text-base">
-            {saving ? 'Submitting...' : 'Submit Application'}
+          <button type="submit" disabled={saving}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3.5 rounded-xl transition-colors text-base">
+            {saving ? (uploadStatus || 'Submitting...') : 'Submit Application'}
           </button>
 
-          <p className="text-xs text-gray-400 text-center">By submitting this form, you agree to be contacted by Tayco LLC regarding subcontracting opportunities.</p>
+          <p className="text-xs text-gray-400 text-center">By submitting this form you agree to be contacted by Tayco LLC regarding subcontracting opportunities.</p>
         </form>
       </div>
     </div>
