@@ -250,6 +250,7 @@ export default function CRM() {
   const [deleting, setDeleting]     = useState<string | null>(null)
   const [showNew, setShowNew]       = useState(false)
   const [search, setSearch]         = useState('')
+  const [actioning, setActioning]   = useState<string | null>(null)
 
   const loadRecords = useCallback(async (tab: TabId) => {
     setLoading(true)
@@ -295,6 +296,30 @@ export default function CRM() {
       alert((e as Error).message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleApproveReject(id: string, action: 'approve' | 'reject') {
+    setActioning(id + action)
+    try {
+      const res = await fetch('/api/airtable', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tab: 'contractors',
+          recordId: id,
+          fields: { 'Approval Status': action === 'approve' ? 'Approved' : 'Denied' },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setRecords(r => r.map(rec =>
+        rec.id === id ? { ...rec, fields: { ...rec.fields, 'Approval Status': action === 'approve' ? 'Approved' : 'Denied' } } : rec
+      ))
+    } catch (e) {
+      alert((e as Error).message)
+    } finally {
+      setActioning(null)
     }
   }
 
@@ -424,7 +449,29 @@ export default function CRM() {
                               </button>
                             </div>
                           ) : (
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-2 flex-wrap">
+                              {activeTab === 'contractors' && (() => {
+                                const status = String(rec.fields['Approval Status'] ?? '')
+                                const isPending = status === 'Pending' || status === 'Pending Review'
+                                return isPending ? (
+                                  <>
+                                    <button
+                                      onClick={() => handleApproveReject(rec.id, 'approve')}
+                                      disabled={actioning !== null}
+                                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors"
+                                    >
+                                      {actioning === rec.id + 'approve' ? '...' : 'Aprobar'}
+                                    </button>
+                                    <button
+                                      onClick={() => handleApproveReject(rec.id, 'reject')}
+                                      disabled={actioning !== null}
+                                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors"
+                                    >
+                                      {actioning === rec.id + 'reject' ? '...' : 'Rechazar'}
+                                    </button>
+                                  </>
+                                ) : null
+                              })()}
                               <button onClick={() => startEdit(rec)}
                                 className="text-blue-500 hover:text-blue-700 text-xs font-medium">
                                 Editar
