@@ -54,7 +54,6 @@ export default function Registro() {
     generalNotes: '',
   })
   const [w9File, setW9File] = useState<File | null>(null)
-  const [certFile, setCertFile] = useState<File | null>(null)
   const [workPhotos, setWorkPhotos] = useState<File[]>([])
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -91,15 +90,10 @@ export default function Registro() {
 
     try {
       let w9Url = ''
-      let certUrl = ''
 
       if (w9File) {
         setUploadStatus('Uploading W9...')
         w9Url = await uploadFile(w9File, 'w9')
-      }
-      if (certFile) {
-        setUploadStatus('Uploading Insurance Certificate...')
-        certUrl = await uploadFile(certFile, 'insurance')
       }
 
       let photoUrls: string[] = []
@@ -120,7 +114,6 @@ export default function Registro() {
         form.otherTrade ? `Other trade/specialty: ${form.otherTrade}` : '',
         form.hasInsurance === 'yes' ? 'Has insurance: YES' : 'Has insurance: NO',
         w9Url ? `W9 Document: ${w9Url}` : '',
-        certUrl ? `Insurance Certificate: ${certUrl}` : '',
         photoUrls.length > 0 ? `Work Photos:\n${photoUrls.map((u, i) => `  Photo ${i + 1}: ${u}`).join('\n')}` : '',
         form.generalNotes,
       ].filter(Boolean).join('\n')
@@ -297,13 +290,9 @@ export default function Registro() {
           {/* Document Uploads */}
           <div>
             <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Documents</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FileUpload label="W9 Form" name="w9" accept=".pdf,.jpg,.jpeg,.png"
-                onChange={setW9File} />
-              <FileUpload label="Insurance Certificate" name="insurance" accept=".pdf,.jpg,.jpeg,.png"
-                onChange={setCertFile} />
-            </div>
-            <p className="text-xs text-gray-400 mt-2">Documents are optional but required before starting any project with us.</p>
+            <FileUpload label="W9 Form" name="w9" accept=".pdf,.jpg,.jpeg,.png"
+              onChange={setW9File} />
+            <p className="text-xs text-gray-400 mt-2">Optional but required before starting any project with us.</p>
           </div>
 
           {/* Work Photos */}
