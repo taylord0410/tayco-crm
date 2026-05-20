@@ -22,6 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
   'Completed':       'bg-blue-100 text-blue-800',
   'Cancelled':       'bg-red-100 text-red-700',
   'Denied':          'bg-red-100 text-red-700',
+  'Declined':        'bg-red-100 text-red-700',
 }
 
 const TRADE_COLORS: Record<string, string> = {
@@ -76,7 +77,7 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'W9 Status',               label: 'W9',       type: 'status', options: ['Pending','Received','Not Received'] },
     { key: '1099 Status',             label: '1099',     type: 'status', options: ['Pending','Received','Not Received'] },
     { key: 'Insurance Verification',  label: 'Seguro',   type: 'status', options: ['Pending','Verified','Not Verified'] },
-    { key: 'Approval Status',         label: 'Aprobación', type: 'status', options: ['Pending','Pending Review','Approved'] },
+    { key: 'Approval Status',         label: 'Aprobación', type: 'status', options: ['Pending','Pending Review','Approved','Declined'] },
   ],
   orders: [
     { key: 'Project Name',       label: 'Proyecto' },
@@ -350,7 +351,7 @@ export default function CRM() {
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">T</div>
+            <img src="/logo.jpeg" alt="Tayco LLC" className="h-10 w-10 rounded-lg object-contain" />
             <span className="font-semibold text-gray-900 text-lg">Tayco Operation System</span>
           </div>
           <div className="flex items-center gap-4">
