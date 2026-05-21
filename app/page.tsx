@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 
-type TabId = 'leads' | 'clients' | 'contractors' | 'orders' | 'assignments'
+type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'orders' | 'assignments'
 type AirtableRecord = { id: string; fields: Record<string, unknown> }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -49,7 +49,7 @@ const TRADE_COLORS: Record<string, string> = {
   'Other':             'bg-gray-100 text-gray-700',
 }
 
-type ColDef = { key: string; label: string; type?: 'status' | 'tags' | 'date' | 'currency' | 'number' | 'notes_field' | 'notes_link'; notesKey?: string; options?: string[]; trades?: boolean }
+type ColDef = { key: string; label: string; type?: 'status' | 'tags' | 'date' | 'currency' | 'number' | 'notes_field' | 'notes_link'; notesKey?: string; notesSource?: string; options?: string[]; trades?: boolean }
 
 function extractFromNotes(notes: unknown, key: string): string {
   const text = typeof notes === 'string' ? notes : ''
@@ -59,6 +59,19 @@ function extractFromNotes(notes: unknown, key: string): string {
 }
 
 const TAB_COLUMNS: Record<TabId, ColDef[]> = {
+  investors: [
+    { key: 'Primary Contact Name', label: 'Nombre' },
+    { key: 'Company Name',         label: 'Empresa' },
+    { key: 'Contact Email',        label: 'Email' },
+    { key: 'Contact Phone',        label: 'Teléfono' },
+    { key: 'status',               label: 'Status',            type: 'status',      options: ['', 'no contact', 'Qualified'] },
+    { key: 'Lead Notes',           label: 'Contacto Pref.',    type: 'notes_field', notesKey: 'Preferred Contact', notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Propiedades',       type: 'notes_field', notesKey: 'Properties Managed', notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Proyectos Activos', type: 'notes_field', notesKey: 'Active Projects', notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Estados',           type: 'notes_field', notesKey: 'States', notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Trabajo Necesario', type: 'notes_field', notesKey: 'Work Needed', notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Notas',             type: 'notes_field', notesKey: 'Notes', notesSource: 'Lead Notes' },
+  ],
   leads: [
     { key: 'Company Name',         label: 'Empresa' },
     { key: 'Primary Contact Name', label: 'Contacto' },
@@ -116,6 +129,7 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
 
 const TABS = [
   { id: 'leads'       as TabId, label: 'Company Leads' },
+  { id: 'investors'   as TabId, label: 'Investor Leads' },
   { id: 'clients'     as TabId, label: 'Active Clients' },
   { id: 'contractors' as TabId, label: 'Subcontractors' },
   { id: 'orders'      as TabId, label: 'Work Orders' },
@@ -134,11 +148,13 @@ function TagBadge({ value }: { value: string }) {
 
 function ReadCell({ col, value, record }: { col: ColDef; value: unknown; record?: Record<string, unknown> }) {
   if (col.type === 'notes_field') {
-    const extracted = extractFromNotes(record?.['General Notes'], col.notesKey ?? col.label)
+    const src = col.notesSource ?? 'General Notes'
+    const extracted = extractFromNotes(record?.[src], col.notesKey ?? col.label)
     return extracted === '—' ? <span className="text-gray-300">—</span> : <span className="max-w-[160px] truncate block">{extracted}</span>
   }
   if (col.type === 'notes_link') {
-    const url = extractFromNotes(record?.['General Notes'], col.notesKey ?? col.label)
+    const src = col.notesSource ?? 'General Notes'
+    const url = extractFromNotes(record?.[src], col.notesKey ?? col.label)
     if (url === '—' || url.toLowerCase().includes('not uploaded')) return <span className="text-gray-300">—</span>
     return <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline text-xs font-medium">Ver documento</a>
   }
@@ -364,9 +380,14 @@ export default function CRM() {
   }
 
   const cols = TAB_COLUMNS[activeTab]
-  const filtered = search
-    ? records.filter(r => Object.values(r.fields).some(v => String(v ?? '').toLowerCase().includes(search.toLowerCase())))
+  const tabRecords = activeTab === 'investors'
+    ? records.filter(r => String(r.fields['Lead Notes'] ?? '').includes('TYPE: Investor Lead'))
+    : activeTab === 'leads'
+    ? records.filter(r => !String(r.fields['Lead Notes'] ?? '').includes('TYPE: Investor Lead'))
     : records
+  const filtered = search
+    ? tabRecords.filter(r => Object.values(r.fields).some(v => String(v ?? '').toLowerCase().includes(search.toLowerCase())))
+    : tabRecords
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
