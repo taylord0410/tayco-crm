@@ -49,7 +49,13 @@ const TRADE_COLORS: Record<string, string> = {
   'Other':             'bg-gray-100 text-gray-700',
 }
 
-type ColDef = { key: string; label: string; type?: 'status' | 'tags' | 'date' | 'currency' | 'number'; options?: string[]; trades?: boolean }
+type ColDef = { key: string; label: string; type?: 'status' | 'tags' | 'date' | 'currency' | 'number' | 'notes_field'; notesKey?: string; options?: string[]; trades?: boolean }
+
+function extractFromNotes(notes: unknown, key: string): string {
+  const text = typeof notes === 'string' ? notes : ''
+  const match = text.match(new RegExp(`^${key}:\\s*(.+)$`, 'm'))
+  return match ? match[1].trim() : '—'
+}
 
 const TAB_COLUMNS: Record<TabId, ColDef[]> = {
   leads: [
@@ -69,15 +75,20 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Contract Status',     label: 'Status',          type: 'status', options: ['Active', 'Inactive'] },
   ],
   contractors: [
-    { key: 'Business Name',           label: 'Empresa' },
-    { key: 'Primary Contact Name',    label: 'Contacto' },
-    { key: 'Contact Phone',           label: 'Teléfono' },
-    { key: 'Crew Size',               label: 'Crew',     type: 'number' },
-    { key: 'Types of Work/Trades',    label: 'Trades',   type: 'tags', trades: true, options: ['Cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Other'] },
-    { key: 'W9 Status',               label: 'W9',       type: 'status', options: ['Pending','Received','Not Received'] },
-    { key: '1099 Status',             label: '1099',     type: 'status', options: ['Pending','Received','Not Received'] },
-    { key: 'Insurance Verification',  label: 'Seguro',   type: 'status', options: ['Pending','Verified','Not Verified'] },
-    { key: 'Approval Status',         label: 'Aprobación', type: 'status', options: ['Pending','Pending Review','Approved','Declined'] },
+    { key: 'Business Name',                 label: 'Empresa' },
+    { key: 'Primary Contact Name',          label: 'Contacto' },
+    { key: 'Contact Phone',                 label: 'Teléfono' },
+    { key: 'Contact Email',                 label: 'Email' },
+    { key: 'Crew Size',                     label: 'Crew',        type: 'number' },
+    { key: 'Types of Work/Trades',          label: 'Trades',      type: 'tags', trades: true, options: ['Cleaning','cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Windows/Doors','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Solar Installation','Framing','Plumbing','Electrical','Carpentry','Landscaping','General Labor','Irrigation','Other'] },
+    { key: 'General Notes',                 label: 'Estado',      type: 'notes_field', notesKey: 'State' },
+    { key: 'General Notes',                 label: 'Ciudades',    type: 'notes_field', notesKey: 'Cities' },
+    { key: 'General Notes',                 label: 'Años Exp.',   type: 'notes_field', notesKey: 'Years in Business' },
+    { key: 'General Notes',                 label: 'Asegurado',   type: 'notes_field', notesKey: 'Insured' },
+    { key: 'W9 Status',                     label: 'W9',          type: 'status', options: ['Pending','Received','Not Received'] },
+    { key: '1099 Status',                   label: '1099',        type: 'status', options: ['Pending','Received','Not Received'] },
+    { key: 'Insurance Verification Status', label: 'Seguro',      type: 'status', options: ['Pending','Verified','Not Verified'] },
+    { key: 'Approval Status',               label: 'Aprobación',  type: 'status', options: ['Pending','Pending Review','Approved','Declined'] },
   ],
   orders: [
     { key: 'Project Name',       label: 'Proyecto' },
@@ -118,7 +129,11 @@ function TagBadge({ value }: { value: string }) {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mr-1 mb-0.5 ${cls}`}>{value}</span>
 }
 
-function ReadCell({ col, value }: { col: ColDef; value: unknown }) {
+function ReadCell({ col, value, record }: { col: ColDef; value: unknown; record?: Record<string, unknown> }) {
+  if (col.type === 'notes_field') {
+    const extracted = extractFromNotes(record?.['General Notes'], col.notesKey ?? col.label)
+    return extracted === '—' ? <span className="text-gray-300">—</span> : <span className="max-w-[160px] truncate block">{extracted}</span>
+  }
   if (value == null || value === '') return <span className="text-gray-300">—</span>
   if (col.type === 'status') return <StatusBadge value={String(value)} />
   if (col.type === 'tags') {
@@ -310,13 +325,13 @@ export default function CRM() {
         body: JSON.stringify({
           tab: 'contractors',
           recordId: id,
-          fields: { 'Approval Status': action === 'approve' ? 'Approved' : 'Denied' },
+          fields: { 'Approval Status': action === 'approve' ? 'Approved' : 'Declined' },
         }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setRecords(r => r.map(rec =>
-        rec.id === id ? { ...rec, fields: { ...rec.fields, 'Approval Status': action === 'approve' ? 'Approved' : 'Denied' } } : rec
+        rec.id === id ? { ...rec, fields: { ...rec.fields, 'Approval Status': action === 'approve' ? 'Approved' : 'Declined' } } : rec
       ))
     } catch (e) {
       alert((e as Error).message)
@@ -435,11 +450,11 @@ export default function CRM() {
                     return (
                       <tr key={rec.id} className={`transition-colors ${isEditing ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
                         <td className="px-3 py-2 text-gray-300 text-xs">{i + 1}</td>
-                        {cols.map(col => (
-                          <td key={col.key} className="px-3 py-2 text-gray-700">
+                        {cols.map((col, ci) => (
+                          <td key={col.key + ci} className="px-3 py-2 text-gray-700">
                             {isEditing
                               ? <EditCell col={col} value={editFields[col.key]} onChange={v => setEditFields(p => ({ ...p, [col.key]: v }))} />
-                              : <ReadCell col={col} value={rec.fields[col.key]} />
+                              : <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} />
                             }
                           </td>
                         ))}
