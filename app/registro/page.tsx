@@ -139,10 +139,10 @@ export default function Registro() {
         'General Notes':         notes,
       }
 
-      const res = await fetch('/api/airtable', {
+      const res = await fetch('/api/registro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tab: 'contractors', fields }),
+        body: JSON.stringify({ fields }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
