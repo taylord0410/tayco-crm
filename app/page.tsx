@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 
-type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'orders' | 'assignments'
+type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'orders' | 'assignments' | 'estimates'
 type AirtableRecord = { id: string; fields: Record<string, unknown> }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -125,11 +125,22 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Start Date',         label: 'Inicio',  type: 'date' },
     { key: 'Finish Date',        label: 'Fin',     type: 'date' },
   ],
+  estimates: [
+    { key: 'Primary Contact Name', label: 'Nombre' },
+    { key: 'Contact Phone',        label: 'Teléfono' },
+    { key: 'Contact Email',        label: 'Email' },
+    { key: 'Company Name',         label: 'Empresa/Propiedad' },
+    { key: 'Lead Notes',           label: 'Ciudad',       type: 'notes_field', notesKey: 'City',        notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Tipo Trabajo', type: 'notes_field', notesKey: 'Work Type',   notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Descripción',  type: 'notes_field', notesKey: 'Description', notesSource: 'Lead Notes' },
+    { key: 'status',               label: 'Status',       type: 'status', options: ['Pending','Qualified','no contact'] },
+  ],
 }
 
 const TABS = [
   { id: 'leads'       as TabId, label: 'Company Leads' },
   { id: 'investors'   as TabId, label: 'Investor Leads' },
+  { id: 'estimates'   as TabId, label: 'Estimate Requests' },
   { id: 'clients'     as TabId, label: 'Active Clients' },
   { id: 'contractors' as TabId, label: 'Subcontractors' },
   { id: 'orders'      as TabId, label: 'Work Orders' },
@@ -382,8 +393,10 @@ export default function CRM() {
   const cols = TAB_COLUMNS[activeTab]
   const tabRecords = activeTab === 'investors'
     ? records.filter(r => String(r.fields['Lead Notes'] ?? '').includes('TYPE: Investor Lead'))
+    : activeTab === 'estimates'
+    ? records.filter(r => String(r.fields['Lead Notes'] ?? '').includes('TYPE: Estimate Request'))
     : activeTab === 'leads'
-    ? records.filter(r => !String(r.fields['Lead Notes'] ?? '').includes('TYPE: Investor Lead'))
+    ? records.filter(r => !String(r.fields['Lead Notes'] ?? '').includes('TYPE: Investor Lead') && !String(r.fields['Lead Notes'] ?? '').includes('TYPE: Estimate Request'))
     : records
   const filtered = search
     ? tabRecords.filter(r => Object.values(r.fields).some(v => String(v ?? '').toLowerCase().includes(search.toLowerCase())))

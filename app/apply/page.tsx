@@ -176,7 +176,7 @@ export default function Registro() {
       <div className="max-w-2xl mx-auto">
 
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">T</div>
+          <img src="/logo.jpeg" alt="Tayco LLC" className="h-20 w-20 rounded-xl object-contain mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-gray-900">Join Our Network</h1>
           <p className="text-gray-500 mt-2">Register as a subcontractor with Tayco LLC. Fill out the form below to get started.</p>
         </div>

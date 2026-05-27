@@ -109,7 +109,7 @@ export default function Solicitudes() {
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">T</div>
+            <img src="/logo.jpeg" alt="Tayco LLC" className="h-10 w-10 rounded-lg object-contain" />
             <div>
               <span className="font-semibold text-gray-900 text-lg">Tayco LLC</span>
               <span className="text-gray-400 text-sm ml-2">— Vendor Requests</span>
