@@ -468,18 +468,18 @@ export default function CRM() {
           {!loading && !error && (
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead style={{background: 'linear-gradient(90deg, #1e40af 0%, #0891b2 60%, #06b6d4 100%)'}}>
                   <tr>
-                    <th className="w-8 px-3 py-3 text-left text-xs font-semibold text-gray-400">#</th>
+                    <th className="w-8 px-3 py-3 text-left text-xs font-semibold text-white/70">#</th>
                     {cols.map(col => (
-                      <th key={col.key} className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                      <th key={col.key} className="px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                         {col.label}
                       </th>
                     ))}
-                    <th className="px-3 py-3 text-right text-xs font-semibold text-gray-400">Acciones</th>
+                    <th className="px-3 py-3 text-right text-xs font-semibold text-white/70">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-blue-100">
                   {filtered.length === 0 && (
                     <tr>
                       <td colSpan={cols.length + 2} className="px-4 py-12 text-center text-gray-400">
@@ -490,10 +490,10 @@ export default function CRM() {
                   {filtered.map((rec, i) => {
                     const isEditing = editingId === rec.id
                     return (
-                      <tr key={rec.id} className={`transition-colors ${isEditing ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
-                        <td className="px-3 py-2 text-gray-300 text-xs">{i + 1}</td>
+                      <tr key={rec.id} className={`transition-colors ${isEditing ? 'bg-blue-50' : i % 2 === 0 ? 'bg-white hover:bg-blue-50/40' : 'bg-blue-50/20 hover:bg-blue-50/50'}`}>
+                        <td className="px-3 py-2.5 text-gray-300 text-xs">{i + 1}</td>
                         {cols.map((col, ci) => (
-                          <td key={col.key + ci} className="px-3 py-2 text-gray-700">
+                          <td key={col.key + ci} className="px-3 py-2.5 text-gray-700">
                             {isEditing
                               ? <EditCell col={col} value={editFields[col.key]} onChange={v => setEditFields(p => ({ ...p, [col.key]: v }))} />
                               : <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} />
