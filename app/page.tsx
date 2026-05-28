@@ -505,9 +505,9 @@ export default function CRM() {
                     const isEditing = editingId === rec.id
                     return (
                       <tr key={rec.id} className={`transition-colors ${isEditing ? 'bg-blue-50' : i % 2 === 0 ? 'bg-white hover:bg-blue-50/40' : 'bg-blue-50/20 hover:bg-blue-50/50'}`}>
-                        <td className="px-3 py-1.5 text-gray-300 text-xs align-top">{i + 1}</td>
+                        <td className="px-3 py-1 text-gray-300 text-xs">{i + 1}</td>
                         {cols.map((col, ci) => (
-                          <td key={col.key + ci} className="px-3 py-1.5 text-gray-700 align-top">
+                          <td key={col.key + ci} className="px-3 py-1 text-gray-700">
                             {isEditing
                               ? <EditCell col={col} value={editFields[col.key]} onChange={v => setEditFields(p => ({ ...p, [col.key]: v }))} />
                               : <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} />
