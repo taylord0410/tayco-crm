@@ -516,20 +516,21 @@ export default function CRM() {
                             </div>
                           </td>
                         ))}
-                        <td className="px-2 text-right whitespace-nowrap" style={{height:'32px'}}>
+                        <td className="px-2 text-right whitespace-nowrap" style={{height:'32px', overflow:'hidden'}}>
+                          <div className="h-8 flex items-center justify-end overflow-hidden">
                           {isEditing ? (
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-1">
                               <button onClick={() => saveEdit(rec.id)} disabled={saving}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-3 py-1 rounded-lg disabled:opacity-50">
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-2 py-0.5 rounded disabled:opacity-50">
                                 {saving ? '...' : 'Guardar'}
                               </button>
                               <button onClick={cancelEdit}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-3 py-1 rounded-lg">
+                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-2 py-0.5 rounded">
                                 Cancelar
                               </button>
                             </div>
                           ) : (
-                            <div className="flex items-center justify-end gap-2 flex-wrap">
+                            <div className="flex items-center justify-end gap-2 flex-nowrap">
                               {activeTab === 'contractors' && (() => {
                                 const status = String(rec.fields['Approval Status'] ?? '')
                                 const isPending = status === 'Pending' || status === 'Pending Review'
@@ -562,6 +563,7 @@ export default function CRM() {
                               </button>
                             </div>
                           )}
+                          </div>
                         </td>
                       </tr>
                     )
