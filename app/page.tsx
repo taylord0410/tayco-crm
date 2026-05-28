@@ -172,7 +172,7 @@ function ReadCell({ col, value, record }: { col: ColDef; value: unknown; record?
   if (value == null || value === '') return <span className="text-gray-300">—</span>
   if (col.type === 'status') return <StatusBadge value={String(value)} />
   if (col.type === 'tags') {
-    const arr = Array.isArray(value) ? value : [value]
+    const arr = (Array.isArray(value) ? value : [value]).map(String).sort()
     const [expanded, setExpanded] = useState(false)
     const visible = expanded ? arr : arr.slice(0, 2)
     return (
