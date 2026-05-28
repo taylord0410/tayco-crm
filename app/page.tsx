@@ -140,15 +140,15 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
 function TagsCell({ value }: { value: unknown }) {
   const [expanded, setExpanded] = useState(false)
   const arr = Array.isArray(value) ? value as string[] : [String(value)]
-  const visible = expanded ? arr : arr.slice(0, 2)
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {visible.map((v, i) => <TagBadge key={i} value={v} />)}
-      {!expanded && arr.length > 2 && (
-        <button onClick={() => setExpanded(true)} className="text-xs text-blue-500 hover:text-blue-700 font-semibold">+{arr.length - 2}</button>
+      <TagBadge value={arr[0]} />
+      {!expanded && arr.length > 1 && (
+        <button onClick={() => setExpanded(true)} className="text-xs text-blue-500 hover:text-blue-700 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">+{arr.length - 1}</button>
       )}
-      {expanded && arr.length > 2 && (
-        <button onClick={() => setExpanded(false)} className="text-xs text-gray-400 hover:text-gray-600">▲</button>
+      {expanded && arr.slice(1).map((v, i) => <TagBadge key={i} value={v} />)}
+      {expanded && (
+        <button onClick={() => setExpanded(false)} className="text-xs text-gray-400 hover:text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">▲</button>
       )}
     </div>
   )
