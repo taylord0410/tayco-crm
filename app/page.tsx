@@ -137,6 +137,23 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
   ],
 }
 
+function TagsCell({ value }: { value: unknown }) {
+  const [expanded, setExpanded] = useState(false)
+  const arr = Array.isArray(value) ? value as string[] : [String(value)]
+  const visible = expanded ? arr : arr.slice(0, 2)
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {visible.map((v, i) => <TagBadge key={i} value={v} />)}
+      {!expanded && arr.length > 2 && (
+        <button onClick={() => setExpanded(true)} className="text-xs text-blue-500 hover:text-blue-700 font-semibold">+{arr.length - 2}</button>
+      )}
+      {expanded && arr.length > 2 && (
+        <button onClick={() => setExpanded(false)} className="text-xs text-gray-400 hover:text-gray-600">▲</button>
+      )}
+    </div>
+  )
+}
+
 const TABS = [
   { id: 'leads'       as TabId, label: 'Company Leads' },
   { id: 'investors'   as TabId, label: 'Investor Leads' },
@@ -171,10 +188,7 @@ function ReadCell({ col, value, record }: { col: ColDef; value: unknown; record?
   }
   if (value == null || value === '') return <span className="text-gray-300">—</span>
   if (col.type === 'status') return <StatusBadge value={String(value)} />
-  if (col.type === 'tags') {
-    const arr = Array.isArray(value) ? value : [value]
-    return <div className="flex flex-wrap gap-1">{arr.map((v, i) => <TagBadge key={i} value={String(v)} />)}</div>
-  }
+  if (col.type === 'tags') return <TagsCell value={value} />
   if (col.type === 'currency') {
     const n = Number(value)
     return <span>${isNaN(n) ? String(value) : n.toLocaleString()}</span>
@@ -491,9 +505,9 @@ export default function CRM() {
                     const isEditing = editingId === rec.id
                     return (
                       <tr key={rec.id} className={`transition-colors ${isEditing ? 'bg-blue-50' : i % 2 === 0 ? 'bg-white hover:bg-blue-50/40' : 'bg-blue-50/20 hover:bg-blue-50/50'}`}>
-                        <td className="px-3 py-2.5 text-gray-300 text-xs">{i + 1}</td>
+                        <td className="px-3 py-1.5 text-gray-300 text-xs align-top">{i + 1}</td>
                         {cols.map((col, ci) => (
-                          <td key={col.key + ci} className="px-3 py-2.5 text-gray-700">
+                          <td key={col.key + ci} className="px-3 py-1.5 text-gray-700 align-top">
                             {isEditing
                               ? <EditCell col={col} value={editFields[col.key]} onChange={v => setEditFields(p => ({ ...p, [col.key]: v }))} />
                               : <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} />
