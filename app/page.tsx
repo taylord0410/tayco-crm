@@ -172,20 +172,8 @@ function ReadCell({ col, value, record }: { col: ColDef; value: unknown; record?
   if (value == null || value === '') return <span className="text-gray-300">—</span>
   if (col.type === 'status') return <StatusBadge value={String(value)} />
   if (col.type === 'tags') {
-    const arr = (Array.isArray(value) ? value : [value]).map(String).sort()
-    const [expanded, setExpanded] = useState(false)
-    const visible = expanded ? arr : arr.slice(0, 2)
-    return (
-      <div className="flex flex-wrap items-center gap-0.5">
-        {visible.map((v, i) => <TagBadge key={i} value={String(v)} />)}
-        {!expanded && arr.length > 2 && (
-          <button onClick={() => setExpanded(true)} className="text-xs text-blue-500 hover:text-blue-700 font-medium ml-1">+{arr.length - 2}</button>
-        )}
-        {expanded && arr.length > 2 && (
-          <button onClick={() => setExpanded(false)} className="text-xs text-gray-400 hover:text-gray-600 font-medium ml-1">menos</button>
-        )}
-      </div>
-    )
+    const arr = Array.isArray(value) ? value : [value]
+    return <div className="flex flex-wrap gap-1">{arr.map((v, i) => <TagBadge key={i} value={String(v)} />)}</div>
   }
   if (col.type === 'currency') {
     const n = Number(value)
