@@ -403,31 +403,31 @@ export default function CRM() {
     : tabRecords
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{background: 'linear-gradient(180deg, #f0f7ff 0%, #e0f2fe 40%, #ffffff 100%)'}}>
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header style={{background: 'linear-gradient(90deg, #1e40af 0%, #0891b2 60%, #06b6d4 100%)'}} className="shadow-md">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo.jpeg" alt="Tayco LLC" className="h-10 w-10 rounded-lg object-contain" />
-            <span className="font-semibold text-gray-900 text-lg">Tayco Operation System</span>
+            <img src="/logo.jpeg" alt="Tayco LLC" className="h-10 w-10 rounded-lg object-contain border-2 border-white/30" />
+            <span className="font-bold text-white text-lg tracking-wide">Tayco Operation System</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/requests" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+            <Link href="/requests" className="text-sm text-white/90 hover:text-white font-medium bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">
               Vendor Requests
             </Link>
-            <span className="text-xs text-gray-400">{new Date().toLocaleDateString('es-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            <span className="text-xs text-white/70">{new Date().toLocaleDateString('es-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
           </div>
         </div>
       </header>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white/80 backdrop-blur border-b border-blue-100 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4">
           <nav className="flex overflow-x-auto">
             {TABS.map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearch('') }}
                 className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                  activeTab === tab.id ? 'border-blue-500 text-blue-600 bg-blue-50/50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  activeTab === tab.id ? 'border-cyan-500 text-cyan-700 bg-cyan-50/60' : 'border-transparent text-gray-600 hover:text-cyan-700 hover:bg-cyan-50/40'
                 }`}
               >{tab.label}</button>
             ))}
