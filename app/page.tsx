@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 
-type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'orders' | 'assignments' | 'estimates'
+type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates'
 type AirtableRecord = { id: string; fields: Record<string, unknown> }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -88,6 +88,16 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Contract Start Date', label: 'Inicio Contrato', type: 'date' },
     { key: 'Contract Status',     label: 'Status',          type: 'status', options: ['Active', 'Inactive'] },
   ],
+  approved: [
+    { key: 'Business Name',                 label: 'Company' },
+    { key: 'Primary Contact Name',          label: 'Contact' },
+    { key: 'Contact Phone',                 label: 'Phone' },
+    { key: 'Contact Email',                 label: 'Email' },
+    { key: 'Types of Work/Trades',          label: 'Trades', type: 'tags', trades: true, options: ['Cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Other'] },
+    { key: 'General Notes',                 label: 'State',  type: 'notes_field', notesKey: 'State' },
+    { key: 'General Notes',                 label: 'Cities', type: 'notes_field', notesKey: 'Cities' },
+    { key: 'Approval Status',               label: 'Status', type: 'status', options: ['Approved'] },
+  ],
   contractors: [
     { key: 'Business Name',                 label: 'Empresa' },
     { key: 'Primary Contact Name',          label: 'Contacto' },
@@ -160,6 +170,7 @@ const TABS = [
   { id: 'estimates'   as TabId, label: 'Estimate Requests' },
   { id: 'clients'     as TabId, label: 'Active Clients' },
   { id: 'contractors' as TabId, label: 'Subcontractors' },
+  { id: 'approved'    as TabId, label: '✓ Approved Vendors' },
   { id: 'orders'      as TabId, label: 'Work Orders' },
   { id: 'assignments' as TabId, label: 'Assignments' },
 ]
@@ -411,6 +422,8 @@ export default function CRM() {
     ? records.filter(r => String(r.fields['Lead Notes'] ?? '').includes('TYPE: Estimate Request'))
     : activeTab === 'leads'
     ? records.filter(r => !String(r.fields['Lead Notes'] ?? '').includes('TYPE: Investor Lead') && !String(r.fields['Lead Notes'] ?? '').includes('TYPE: Estimate Request'))
+    : activeTab === 'approved'
+    ? records.filter(r => String(r.fields['Approval Status'] ?? '') === 'Approved')
     : records
   const filtered = search
     ? tabRecords.filter(r => Object.values(r.fields).some(v => String(v ?? '').toLowerCase().includes(search.toLowerCase())))
