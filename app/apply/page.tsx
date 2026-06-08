@@ -54,6 +54,7 @@ export default function Registro() {
   })
   const [otherTrade, setOtherTrade] = useState('')
   const [w9File, setW9File] = useState<File | null>(null)
+  const [coiFile, setCoiFile] = useState<File | null>(null)
   const [workPhotos, setWorkPhotos] = useState<File[]>([])
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -97,10 +98,16 @@ export default function Registro() {
 
     try {
       let w9Url = ''
+      let coiUrl = ''
 
       if (w9File) {
         setUploadStatus('Uploading W9...')
         w9Url = await uploadFile(w9File, 'w9')
+      }
+
+      if (coiFile) {
+        setUploadStatus('Uploading Certificate of Insurance...')
+        coiUrl = await uploadFile(coiFile, 'insurance')
       }
 
       let photoUrls: string[] = []
@@ -117,12 +124,23 @@ export default function Registro() {
       setUploadStatus('Saving your information...')
 
       const notes = [
-        form.yearsExperience ? `Years of experience: ${form.yearsExperience}` : '',
-        form.hasInsurance === 'yes' ? 'Has insurance: YES' : 'Has insurance: NO',
-        w9Url ? `W9 Document: ${w9Url}` : '',
+        `Source: Website Application`,
+        form.trades.length > 0 ? `Trades: ${form.trades.join(', ')}` : '',
+        form.citiesServed ? `Cities: ${form.citiesServed}` : '',
+        form.hasInsurance === 'yes' ? `Insured: Yes` : `Insured: No`,
+        form.yearsExperience ? `Years in Business: ${form.yearsExperience}` : '',
+        form.crewSize ? `Crew: ${form.crewSize}` : '',
+        form.generalNotes ? `Notes: ${form.generalNotes}` : '',
+        w9Url ? `W9: ${w9Url}` : `W9: Not uploaded`,
+        coiUrl ? `Insurance COI: ${coiUrl}` : `Insurance COI: Not uploaded`,
         photoUrls.length > 0 ? `Work Photos:\n${photoUrls.map((u, i) => `  Photo ${i + 1}: ${u}`).join('\n')}` : '',
-        form.generalNotes,
       ].filter(Boolean).join('\n')
+
+      // Determine what's missing so the server can send an automatic email
+      const missingDocs: string[] = []
+      if (!w9Url) missingDocs.push('W9 Form — required before starting any project')
+      if (!coiUrl) missingDocs.push('Certificate of Insurance (COI) — required for approval')
+      if (form.hasInsurance === 'no') missingDocs.push('General Liability Insurance — required to work with Tayco LLC')
 
       const fields: Record<string, unknown> = {
         'Business Name':         form.businessName,
@@ -132,17 +150,17 @@ export default function Registro() {
         'Crew Size':             form.crewSize ? Number(form.crewSize) : undefined,
         'Types of Work/Trades':  form.trades,
         'Cities Served':         form.citiesServed,
-        'Insurance Verification': form.hasInsurance === 'yes' ? 'Pending' : 'Not Verified',
+        'Insurance Verification Status': form.hasInsurance === 'yes' ? 'Pending' : 'Not Verified',
         'W9 Status':             'Pending',
         '1099 Status':           'Pending',
         'Approval Status':       'Pending',
         'General Notes':         notes,
       }
 
-      const res = await fetch('/api/airtable', {
+      const res = await fetch('/api/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tab: 'contractors', fields }),
+        body: JSON.stringify({ fields, missingDocs }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -316,7 +334,10 @@ export default function Registro() {
             <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Documents</h3>
             <FileUpload label="W9 Form" name="w9" accept=".pdf,.jpg,.jpeg,.png"
               onChange={setW9File} />
-            <p className="text-xs text-gray-400 mt-2">Optional but required before starting any project with us.</p>
+            <p className="text-xs text-gray-400 mt-2 mb-4">Required before starting any project with us.</p>
+            <FileUpload label="Certificate of Insurance (COI)" name="coi" accept=".pdf,.jpg,.jpeg,.png"
+              onChange={setCoiFile} />
+            <p className="text-xs text-gray-400 mt-2">Required for vendor approval.</p>
           </div>
 
           {/* Work Photos */}
