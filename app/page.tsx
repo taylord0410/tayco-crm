@@ -455,6 +455,8 @@ export default function CRM() {
     ? records.filter(r => !String(r.fields['Lead Notes'] ?? '').includes('TYPE: Investor Lead') && !String(r.fields['Lead Notes'] ?? '').includes('TYPE: Estimate Request'))
     : activeTab === 'approved'
     ? records.filter(r => String(r.fields['Approval Status'] ?? '') === 'Approved')
+    : activeTab === 'contractors'
+    ? records.filter(r => String(r.fields['Approval Status'] ?? '') !== 'Approved')
     : records
   const filtered = search
     ? tabRecords.filter(r => Object.values(r.fields).some(v => String(v ?? '').toLowerCase().includes(search.toLowerCase())))
