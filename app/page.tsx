@@ -147,18 +147,16 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
   ],
 }
 
-function TagsCell({ value }: { value: unknown }) {
-  const [expanded, setExpanded] = useState(false)
+function TagsCell({ value, compact = true, onOpenDetail }: { value: unknown; compact?: boolean; onOpenDetail?: () => void }) {
   const arr = Array.isArray(value) ? value as string[] : [String(value)]
+  if (!compact) {
+    return <div className="flex flex-wrap gap-1">{arr.map((v, i) => <TagBadge key={i} value={v} />)}</div>
+  }
   return (
-    <div className="flex flex-wrap items-center gap-1">
+    <div className="flex flex-wrap items-center gap-1 cursor-pointer" onClick={onOpenDetail} title="Click to view full details">
       <TagBadge value={arr[0]} />
-      {!expanded && arr.length > 1 && (
-        <button onClick={() => setExpanded(true)} className="text-xs text-blue-500 hover:text-blue-700 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">+{arr.length - 1}</button>
-      )}
-      {expanded && arr.slice(1).map((v, i) => <TagBadge key={i} value={v} />)}
-      {expanded && (
-        <button onClick={() => setExpanded(false)} className="text-xs text-gray-400 hover:text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">▲</button>
+      {arr.length > 1 && (
+        <span className="text-xs text-blue-500 hover:text-blue-700 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">+{arr.length - 1}</span>
       )}
     </div>
   )
@@ -185,28 +183,29 @@ function TagBadge({ value }: { value: string }) {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mr-1 mb-0.5 ${cls}`}>{value}</span>
 }
 
-function ReadCell({ col, value, record }: { col: ColDef; value: unknown; record?: Record<string, unknown> }) {
+function ReadCell({ col, value, record, compact = true, onOpenDetail }: { col: ColDef; value: unknown; record?: Record<string, unknown>; compact?: boolean; onOpenDetail?: () => void }) {
   if (col.type === 'notes_field') {
     const src = col.notesSource ?? 'General Notes'
     const extracted = extractFromNotes(record?.[src], col.notesKey ?? col.label)
-    return extracted === '—' ? <span className="text-gray-300">—</span> : <span className="max-w-[160px] truncate block">{extracted}</span>
+    if (extracted === '—') return <span className="text-gray-300">—</span>
+    return <span className={compact ? 'max-w-[160px] truncate block' : 'block whitespace-pre-wrap'}>{extracted}</span>
   }
   if (col.type === 'notes_link') {
     const src = col.notesSource ?? 'General Notes'
     const url = extractFromNotes(record?.[src], col.notesKey ?? col.label)
     if (url === '—' || url.toLowerCase().includes('not uploaded')) return <span className="text-gray-300">—</span>
-    return <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline text-xs font-medium">Ver documento</a>
+    return <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline text-xs font-medium">View Document</a>
   }
   if (value == null || value === '') return <span className="text-gray-300">—</span>
   if (col.type === 'status') return <StatusBadge value={String(value)} />
-  if (col.type === 'tags') return <TagsCell value={value} />
+  if (col.type === 'tags') return <TagsCell value={value} compact={compact} onOpenDetail={onOpenDetail} />
   if (col.type === 'currency') {
     const n = Number(value)
     return <span>${isNaN(n) ? String(value) : n.toLocaleString()}</span>
   }
   if (col.type === 'date') return <span>{String(value).split('T')[0]}</span>
   if (Array.isArray(value)) return <span>{value.join(', ')}</span>
-  return <span className="max-w-[180px] truncate block">{String(value)}</span>
+  return <span className={compact ? 'max-w-[180px] truncate block' : 'block whitespace-pre-wrap'}>{String(value)}</span>
 }
 
 function EditCell({ col, value, onChange }: { col: ColDef; value: unknown; onChange: (v: unknown) => void }) {
@@ -316,6 +315,37 @@ function NewRecordModal({ tab, cols, onClose, onSaved }: { tab: TabId; cols: Col
   )
 }
 
+// Detail modal — shows every field for one record on a single page
+function RecordDetailModal({ record, cols, onClose }: { record: AirtableRecord; cols: ColDef[]; onClose: () => void }) {
+  const title = String(
+    record.fields['Business Name'] ?? record.fields['Company Name'] ?? record.fields['Project Name'] ??
+    record.fields['Assignment Name'] ?? record.fields['Primary Contact Name'] ?? 'Details'
+  )
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        </div>
+        <div className="overflow-y-auto px-6 py-4 flex flex-col gap-3">
+          {cols.map((col, i) => (
+            <div key={col.key + col.label + i}>
+              <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">{col.label}</label>
+              <div className="text-sm text-gray-800">
+                <ReadCell col={col} value={record.fields[col.key]} record={record.fields} compact={false} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end gap-3 px-6 py-4 border-t">
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Close</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function CRM() {
   const [activeTab, setActiveTab]   = useState<TabId>('leads')
   const [records, setRecords]       = useState<AirtableRecord[]>([])
@@ -326,6 +356,7 @@ export default function CRM() {
   const [saving, setSaving]         = useState(false)
   const [deleting, setDeleting]     = useState<string | null>(null)
   const [showNew, setShowNew]       = useState(false)
+  const [viewingRecord, setViewingRecord] = useState<AirtableRecord | null>(null)
   const [search, setSearch]         = useState('')
   const [actioning, setActioning]   = useState<string | null>(null)
 
@@ -524,7 +555,7 @@ export default function CRM() {
                             <div className="h-8 flex items-center overflow-hidden">
                             {isEditing
                               ? <EditCell col={col} value={editFields[col.key]} onChange={v => setEditFields(p => ({ ...p, [col.key]: v }))} />
-                              : <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} />
+                              : <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} />
                             }
                             </div>
                           </td>
@@ -594,6 +625,14 @@ export default function CRM() {
           cols={cols}
           onClose={() => setShowNew(false)}
           onSaved={() => { setShowNew(false); loadRecords(activeTab) }}
+        />
+      )}
+
+      {viewingRecord && (
+        <RecordDetailModal
+          record={viewingRecord}
+          cols={cols}
+          onClose={() => setViewingRecord(null)}
         />
       )}
     </div>
