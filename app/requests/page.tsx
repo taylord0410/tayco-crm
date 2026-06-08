@@ -97,10 +97,10 @@ export default function Solicitudes() {
   }).length
 
   const FILTERS: { id: Filter; label: string; color: string }[] = [
-    { id: 'pending',  label: `Pendientes (${pendingCount})`, color: 'bg-yellow-500' },
-    { id: 'approved', label: 'Aprobados',  color: 'bg-green-500' },
-    { id: 'denied',   label: 'Rechazados', color: 'bg-red-500' },
-    { id: 'all',      label: 'Todos',      color: 'bg-gray-500' },
+    { id: 'pending',  label: `Pending (${pendingCount})`, color: 'bg-yellow-500' },
+    { id: 'approved', label: 'Approved', color: 'bg-green-500' },
+    { id: 'denied',   label: 'Denied',   color: 'bg-red-500' },
+    { id: 'all',      label: 'All',      color: 'bg-gray-500' },
   ]
 
   return (
@@ -152,7 +152,7 @@ export default function Solicitudes() {
             <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <p className="text-lg font-medium">No hay Vendor Requests aqui</p>
+            <p className="text-lg font-medium">No Vendor Requests here</p>
           </div>
         )}
 
@@ -190,7 +190,7 @@ export default function Solicitudes() {
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     {!!f['Contact Phone'] && (
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">Telefono</p>
+                        <p className="text-xs text-gray-400 mb-0.5">Phone</p>
                         <p className="text-gray-700 font-medium">{String(f['Contact Phone'])}</p>
                       </div>
                     )}
@@ -202,7 +202,7 @@ export default function Solicitudes() {
                     )}
                     {!!f['Cities Served'] && (
                       <div className="col-span-2">
-                        <p className="text-xs text-gray-400 mb-0.5">Ciudades</p>
+                        <p className="text-xs text-gray-400 mb-0.5">Cities</p>
                         <p className="text-gray-700">{String(f['Cities Served'])}</p>
                       </div>
                     )}
@@ -217,7 +217,7 @@ export default function Solicitudes() {
                   {/* Trades */}
                   {trades.length > 0 ? (
                     <div>
-                      <p className="text-xs text-gray-400 mb-1.5">Especialidades</p>
+                      <p className="text-xs text-gray-400 mb-1.5">Specialties</p>
                       <div className="flex flex-wrap gap-1">
                         {trades.map((t, i) => (
                           <span key={i} className={`text-xs px-2 py-0.5 rounded font-medium ${TRADE_COLORS[t] ?? 'bg-gray-100 text-gray-700'}`}>{t}</span>
@@ -230,13 +230,13 @@ export default function Solicitudes() {
                   <div className="flex gap-3 text-xs">
                     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-medium ${hasInsurance ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       <div className={`w-1.5 h-1.5 rounded-full ${hasInsurance ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      Seguro: {hasInsurance ? 'Si' : 'No'}
+                      Insurance: {hasInsurance ? 'Yes' : 'No'}
                     </div>
                     {w9Url ? (
                       <a href={w9Url} target="_blank" rel="noreferrer"
                         className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-medium hover:bg-blue-100 transition-colors">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        Ver W9
+                        View W9
                       </a>
                     ) : null}
                   </div>
@@ -244,7 +244,7 @@ export default function Solicitudes() {
                   {/* Work photos */}
                   {photoUrls.length > 0 ? (
                     <div>
-                      <p className="text-xs text-gray-400 mb-1.5">Fotos de trabajo ({photoUrls.length})</p>
+                      <p className="text-xs text-gray-400 mb-1.5">Work Photos ({photoUrls.length})</p>
                       <div className="flex gap-2 flex-wrap">
                         {photoUrls.map((url, i) => (
                           <a key={i} href={url} target="_blank" rel="noreferrer">
@@ -259,7 +259,7 @@ export default function Solicitudes() {
                   {/* Notes */}
                   {!!f['General Notes'] ? (
                     <div>
-                      <p className="text-xs text-gray-400 mb-1">Notas adicionales</p>
+                      <p className="text-xs text-gray-400 mb-1">Additional Notes</p>
                       <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{
                         notes.replace(/W9 Document:.*\n?/g, '').replace(/Photo \d+:.*\n?/g, '').replace(/Has insurance:.*\n?/g, '').replace(/Work Photos:\n?/g, '').trim()
                       }</p>

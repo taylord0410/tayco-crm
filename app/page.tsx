@@ -60,33 +60,33 @@ function extractFromNotes(notes: unknown, key: string): string {
 
 const TAB_COLUMNS: Record<TabId, ColDef[]> = {
   investors: [
-    { key: 'Primary Contact Name', label: 'Nombre' },
-    { key: 'Company Name',         label: 'Empresa' },
+    { key: 'Primary Contact Name', label: 'Name' },
+    { key: 'Company Name',         label: 'Company' },
     { key: 'Contact Email',        label: 'Email' },
-    { key: 'Contact Phone',        label: 'Teléfono' },
-    { key: 'status',               label: 'Status',            type: 'status',      options: ['', 'no contact', 'Qualified'] },
-    { key: 'Lead Notes',           label: 'Contacto Pref.',    type: 'notes_field', notesKey: 'Preferred Contact', notesSource: 'Lead Notes' },
-    { key: 'Lead Notes',           label: 'Propiedades',       type: 'notes_field', notesKey: 'Properties Managed', notesSource: 'Lead Notes' },
-    { key: 'Lead Notes',           label: 'Proyectos Activos', type: 'notes_field', notesKey: 'Active Projects', notesSource: 'Lead Notes' },
-    { key: 'Lead Notes',           label: 'Estados',           type: 'notes_field', notesKey: 'States', notesSource: 'Lead Notes' },
-    { key: 'Lead Notes',           label: 'Trabajo Necesario', type: 'notes_field', notesKey: 'Work Needed', notesSource: 'Lead Notes' },
-    { key: 'Lead Notes',           label: 'Notas',             type: 'notes_field', notesKey: 'Notes', notesSource: 'Lead Notes' },
+    { key: 'Contact Phone',        label: 'Phone' },
+    { key: 'status',               label: 'Status',          type: 'status',      options: ['', 'no contact', 'Qualified'] },
+    { key: 'Lead Notes',           label: 'Pref. Contact',   type: 'notes_field', notesKey: 'Preferred Contact', notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Properties',      type: 'notes_field', notesKey: 'Properties Managed', notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Active Projects', type: 'notes_field', notesKey: 'Active Projects', notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'States',          type: 'notes_field', notesKey: 'States', notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Work Needed',     type: 'notes_field', notesKey: 'Work Needed', notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Notes',           type: 'notes_field', notesKey: 'Notes', notesSource: 'Lead Notes' },
   ],
   leads: [
-    { key: 'Company Name',         label: 'Empresa' },
-    { key: 'Primary Contact Name', label: 'Contacto' },
+    { key: 'Company Name',         label: 'Company' },
+    { key: 'Primary Contact Name', label: 'Contact' },
     { key: 'Contact Email',        label: 'Email' },
-    { key: 'Contact Phone',        label: 'Teléfono' },
+    { key: 'Contact Phone',        label: 'Phone' },
     { key: 'status',               label: 'Status',   type: 'status', options: ['', 'no contact', 'Qualified'] },
-    { key: 'Lead Notes',           label: 'Notas' },
+    { key: 'Lead Notes',           label: 'Notes' },
   ],
   clients: [
-    { key: 'Company Name',        label: 'Empresa' },
-    { key: 'Contact Name',        label: 'Contacto' },
+    { key: 'Company Name',        label: 'Company' },
+    { key: 'Contact Name',        label: 'Contact' },
     { key: 'Contact Email',       label: 'Email' },
-    { key: 'Contact Phone',       label: 'Teléfono' },
-    { key: 'Contract Start Date', label: 'Inicio Contrato', type: 'date' },
-    { key: 'Contract Status',     label: 'Status',          type: 'status', options: ['Active', 'Inactive'] },
+    { key: 'Contact Phone',       label: 'Phone' },
+    { key: 'Contract Start Date', label: 'Contract Start', type: 'date' },
+    { key: 'Contract Status',     label: 'Status',         type: 'status', options: ['Active', 'Inactive'] },
   ],
   approved: [
     { key: 'Business Name',                 label: 'Company' },
@@ -99,51 +99,51 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Approval Status',               label: 'Status', type: 'status', options: ['Approved'] },
   ],
   contractors: [
-    { key: 'Business Name',                 label: 'Empresa' },
-    { key: 'Primary Contact Name',          label: 'Contacto' },
-    { key: 'Contact Phone',                 label: 'Teléfono' },
+    { key: 'Business Name',                 label: 'Company' },
+    { key: 'Primary Contact Name',          label: 'Contact' },
+    { key: 'Contact Phone',                 label: 'Phone' },
     { key: 'Contact Email',                 label: 'Email' },
-    { key: 'Crew Size',                     label: 'Crew',        type: 'number' },
-    { key: 'Types of Work/Trades',          label: 'Trades',      type: 'tags', trades: true, options: ['Cleaning','cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Windows/Doors','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Solar Installation','Framing','Plumbing','Electrical','Carpentry','Landscaping','General Labor','Irrigation','Other'] },
-    { key: 'General Notes',                 label: 'Estado',        type: 'notes_field', notesKey: 'State' },
-    { key: 'General Notes',                 label: 'Ciudades',      type: 'notes_field', notesKey: 'Cities' },
-    { key: 'General Notes',                 label: 'Años Exp.',     type: 'notes_field', notesKey: 'Years in Business' },
-    { key: 'General Notes',                 label: 'Asegurado',     type: 'notes_field', notesKey: 'Insured' },
+    { key: 'Crew Size',                     label: 'Crew',          type: 'number' },
+    { key: 'Types of Work/Trades',          label: 'Trades',        type: 'tags', trades: true, options: ['Cleaning','cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Windows/Doors','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Solar Installation','Framing','Plumbing','Electrical','Carpentry','Landscaping','General Labor','Irrigation','Other'] },
+    { key: 'General Notes',                 label: 'State',         type: 'notes_field', notesKey: 'State' },
+    { key: 'General Notes',                 label: 'Cities',        type: 'notes_field', notesKey: 'Cities' },
+    { key: 'General Notes',                 label: 'Years Exp.',    type: 'notes_field', notesKey: 'Years in Business' },
+    { key: 'General Notes',                 label: 'Insured',       type: 'notes_field', notesKey: 'Insured' },
     { key: 'General Notes',                 label: 'W9 Doc',        type: 'notes_link',  notesKey: 'W9' },
-    { key: 'General Notes',                 label: 'Seguro Doc',    type: 'notes_link',  notesKey: 'Insurance COI' },
-    { key: 'W9 Status',                     label: 'W9 Status',     type: 'status', options: ['Pending','Received','Not Received'] },
-    { key: '1099 Status',                   label: '1099',          type: 'status', options: ['Pending','Received','Not Received'] },
-    { key: 'Insurance Verification Status', label: 'Seguro Status', type: 'status', options: ['Pending','Verified','Not Verified'] },
-    { key: 'Approval Status',               label: 'Aprobación',    type: 'status', options: ['Pending','Pending Review','Approved','Declined'] },
+    { key: 'General Notes',                 label: 'Insurance Doc', type: 'notes_link',  notesKey: 'Insurance COI' },
+    { key: 'W9 Status',                     label: 'W9 Status',       type: 'status', options: ['Pending','Received','Not Received'] },
+    { key: '1099 Status',                   label: '1099',            type: 'status', options: ['Pending','Received','Not Received'] },
+    { key: 'Insurance Verification Status', label: 'Insurance Status',type: 'status', options: ['Pending','Verified','Not Verified'] },
+    { key: 'Approval Status',               label: 'Approval',        type: 'status', options: ['Pending','Pending Review','Approved','Declined'] },
   ],
   orders: [
-    { key: 'Project Name',       label: 'Proyecto' },
-    { key: 'Company Name',       label: 'Empresa' },
-    { key: 'Type of Work',       label: 'Tipo', type: 'tags', trades: true, options: ['Cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Other'] },
-    { key: 'State',              label: 'Estado' },
-    { key: 'City',               label: 'Ciudad' },
-    { key: 'Contract Price',     label: 'Precio', type: 'currency' },
+    { key: 'Project Name',       label: 'Project' },
+    { key: 'Company Name',       label: 'Company' },
+    { key: 'Type of Work',       label: 'Type', type: 'tags', trades: true, options: ['Cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Other'] },
+    { key: 'State',              label: 'State' },
+    { key: 'City',               label: 'City' },
+    { key: 'Contract Price',     label: 'Price', type: 'currency' },
     { key: 'Project Status',     label: 'Status', type: 'status', options: ['Active','On Hold','Completed','Cancelled'] },
   ],
   assignments: [
-    { key: 'Assignment Name',    label: 'Asignación' },
-    { key: 'Company Name',       label: 'Empresa' },
-    { key: 'Subcontractor Name', label: 'Subcontratista' },
-    { key: 'Type of Work',       label: 'Tipo', type: 'tags', trades: true, options: ['Cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Other'] },
-    { key: 'subcontractor cost', label: 'Costo',   type: 'currency' },
-    { key: 'Permit Status',      label: 'Permiso', type: 'status', options: ['Pending','Approved','Denied'] },
-    { key: 'Start Date',         label: 'Inicio',  type: 'date' },
-    { key: 'Finish Date',        label: 'Fin',     type: 'date' },
+    { key: 'Assignment Name',    label: 'Assignment' },
+    { key: 'Company Name',       label: 'Company' },
+    { key: 'Subcontractor Name', label: 'Subcontractor' },
+    { key: 'Type of Work',       label: 'Type', type: 'tags', trades: true, options: ['Cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Other'] },
+    { key: 'subcontractor cost', label: 'Cost',   type: 'currency' },
+    { key: 'Permit Status',      label: 'Permit', type: 'status', options: ['Pending','Approved','Denied'] },
+    { key: 'Start Date',         label: 'Start Date', type: 'date' },
+    { key: 'Finish Date',        label: 'End Date',   type: 'date' },
   ],
   estimates: [
-    { key: 'Primary Contact Name', label: 'Nombre' },
-    { key: 'Contact Phone',        label: 'Teléfono' },
+    { key: 'Primary Contact Name', label: 'Name' },
+    { key: 'Contact Phone',        label: 'Phone' },
     { key: 'Contact Email',        label: 'Email' },
-    { key: 'Company Name',         label: 'Empresa/Propiedad' },
-    { key: 'Lead Notes',           label: 'Ciudad',       type: 'notes_field', notesKey: 'City',        notesSource: 'Lead Notes' },
-    { key: 'Lead Notes',           label: 'Tipo Trabajo', type: 'notes_field', notesKey: 'Work Type',   notesSource: 'Lead Notes' },
-    { key: 'Lead Notes',           label: 'Descripción',  type: 'notes_field', notesKey: 'Description', notesSource: 'Lead Notes' },
-    { key: 'status',               label: 'Status',       type: 'status', options: ['Pending','Qualified','no contact'] },
+    { key: 'Company Name',         label: 'Company/Property' },
+    { key: 'Lead Notes',           label: 'City',        type: 'notes_field', notesKey: 'City',        notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Work Type',   type: 'notes_field', notesKey: 'Work Type',   notesSource: 'Lead Notes' },
+    { key: 'Lead Notes',           label: 'Description', type: 'notes_field', notesKey: 'Description', notesSource: 'Lead Notes' },
+    { key: 'status',               label: 'Status',      type: 'status', options: ['Pending','Qualified','no contact'] },
   ],
 }
 
@@ -293,7 +293,7 @@ function NewRecordModal({ tab, cols, onClose, onSaved }: { tab: TabId; cols: Col
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">Nuevo Registro</h2>
+          <h2 className="text-lg font-semibold text-gray-900">New Record</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
         </div>
         <div className="overflow-y-auto px-6 py-4 flex flex-col gap-3">
@@ -306,9 +306,9 @@ function NewRecordModal({ tab, cols, onClose, onSaved }: { tab: TabId; cols: Col
           {error && <p className="text-red-600 text-sm">{error}</p>}
         </div>
         <div className="flex justify-end gap-3 px-6 py-4 border-t">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Cancelar</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
           <button onClick={handleSave} disabled={saving} className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50">
-            {saving ? 'Guardando...' : 'Guardar'}
+            {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>
@@ -401,7 +401,7 @@ export default function CRM() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('¿Eliminar este registro?')) return
+    if (!confirm('Delete this record?')) return
     setDeleting(id)
     try {
       await fetch('/api/airtable', {
@@ -442,7 +442,7 @@ export default function CRM() {
             <Link href="/requests" className="text-sm text-white/90 hover:text-white font-medium bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">
               Vendor Requests
             </Link>
-            <span className="text-xs text-white/70">{new Date().toLocaleDateString('es-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            <span className="text-xs text-white/70">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
           </div>
         </div>
       </header>
@@ -466,15 +466,15 @@ export default function CRM() {
       <div className="max-w-screen-xl mx-auto px-4 py-4 w-full flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">{TABS.find(t => t.id === activeTab)?.label}</h2>
-          <p className="text-sm text-gray-400">{filtered.length} registro{filtered.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm text-gray-400">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-3">
-          <input type="search" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)}
+          <input type="search" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)}
             className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
           />
           <button onClick={() => setShowNew(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors">
-            + Nuevo
+            + New
           </button>
         </div>
       </div>
@@ -488,7 +488,7 @@ export default function CRM() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
               </svg>
-              Cargando...
+              Loading...
             </div>
           )}
           {error && <div className="p-6 text-red-600 text-sm"><strong>Error:</strong> {error}</div>}
@@ -503,14 +503,14 @@ export default function CRM() {
                         {col.label}
                       </th>
                     ))}
-                    <th className="px-2 py-2 text-right text-xs font-semibold text-white/70">Acciones</th>
+                    <th className="px-2 py-2 text-right text-xs font-semibold text-white/70">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filtered.length === 0 && (
                     <tr>
                       <td colSpan={cols.length + 2} className="px-4 py-12 text-center text-gray-400">
-                        No hay registros. Haz click en <strong>+ Nuevo</strong> para agregar uno.
+                        No records. Click <strong>+ New</strong> to add one.
                       </td>
                     </tr>
                   )}
@@ -535,11 +535,11 @@ export default function CRM() {
                             <div className="flex items-center justify-end gap-1">
                               <button onClick={() => saveEdit(rec.id)} disabled={saving}
                                 className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-2 py-0.5 rounded disabled:opacity-50">
-                                {saving ? '...' : 'Guardar'}
+                                {saving ? '...' : 'Save'}
                               </button>
                               <button onClick={cancelEdit}
                                 className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-2 py-0.5 rounded">
-                                Cancelar
+                                Cancel
                               </button>
                             </div>
                           ) : (
@@ -554,25 +554,25 @@ export default function CRM() {
                                       disabled={actioning !== null}
                                       className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors"
                                     >
-                                      {actioning === rec.id + 'approve' ? '...' : 'Aprobar'}
+                                      {actioning === rec.id + 'approve' ? '...' : 'Approve'}
                                     </button>
                                     <button
                                       onClick={() => handleApproveReject(rec.id, 'reject')}
                                       disabled={actioning !== null}
                                       className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors"
                                     >
-                                      {actioning === rec.id + 'reject' ? '...' : 'Rechazar'}
+                                      {actioning === rec.id + 'reject' ? '...' : 'Reject'}
                                     </button>
                                   </>
                                 ) : null
                               })()}
                               <button onClick={() => startEdit(rec)}
                                 className="text-blue-500 hover:text-blue-700 text-xs font-medium">
-                                Editar
+                                Edit
                               </button>
                               <button onClick={() => handleDelete(rec.id)} disabled={deleting === rec.id}
                                 className="text-red-400 hover:text-red-600 text-xs font-medium disabled:opacity-40">
-                                {deleting === rec.id ? '...' : 'Eliminar'}
+                                {deleting === rec.id ? '...' : 'Delete'}
                               </button>
                             </div>
                           )}
