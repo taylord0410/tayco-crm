@@ -2,14 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export function middleware(req: NextRequest) {
   const session = req.cookies.get('crm_session')
-  const isLoginPage = req.nextUrl.pathname === '/login'
-  const isApi = req.nextUrl.pathname.startsWith('/api')
+  const pathname = req.nextUrl.pathname
+  const isLoginPage = pathname === '/login'
 
-  const isPublicForm = req.nextUrl.pathname.startsWith('/apply') || req.nextUrl.pathname.startsWith('/registro')
-  const isUpload = req.nextUrl.pathname.startsWith('/api/upload')
-  if (isApi || isLoginPage || isPublicForm || isUpload) return NextResponse.next()
+  const isPublicForm = pathname.startsWith('/apply') || pathname.startsWith('/registro')
+  const isPublicApi =
+    pathname.startsWith('/api/login') ||
+    pathname.startsWith('/api/registro') ||
+    pathname.startsWith('/api/apply') ||
+    pathname.startsWith('/api/upload')
 
-  if (!session) {
+  if (isLoginPage || isPublicForm || isPublicApi) return NextResponse.next()
+
+  const isAuthenticated = !!session?.value && session.value === process.env.SESSION_SECRET
+
+  if (!isAuthenticated) {
+    if (pathname.startsWith('/api')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
