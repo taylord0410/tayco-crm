@@ -96,6 +96,8 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Types of Work/Trades',          label: 'Trades', type: 'tags', trades: true, options: ['Cleaning','Drywall','Painting','HVAC','Concrete','Masonry','Flooring','Tile','Roofing','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Sealants','Steel Erection','Welding','Fire Protection','Sprinklers','Other'] },
     { key: 'General Notes',                 label: 'State',  type: 'notes_field', notesKey: 'State' },
     { key: 'General Notes',                 label: 'Cities', type: 'notes_field', notesKey: 'Cities' },
+    { key: 'General Notes',                 label: 'W9 Doc',        type: 'notes_link', notesKey: 'W9' },
+    { key: 'General Notes',                 label: 'Insurance Doc', type: 'notes_link', notesKey: 'Insurance COI' },
     { key: 'Approval Status',               label: 'Status', type: 'status', options: ['Approved'] },
   ],
   contractors: [
