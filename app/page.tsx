@@ -329,11 +329,59 @@ function NewRecordModal({ tab, cols, onClose, onSaved }: { tab: TabId; cols: Col
 }
 
 // Detail modal — shows every field for one record on a single page
-function RecordDetailModal({ record, cols, onClose }: { record: AirtableRecord; cols: ColDef[]; onClose: () => void }) {
+function RecordDetailModal({ record, cols, onClose, onRecordUpdated }: { record: AirtableRecord; cols: ColDef[]; onClose: () => void; onRecordUpdated?: (id: string, fields: Record<string, unknown>) => void }) {
+  const [uploading, setUploading] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState('')
+
   const title = String(
     record.fields['Business Name'] ?? record.fields['Company Name'] ?? record.fields['Project Name'] ??
     record.fields['Assignment Name'] ?? record.fields['Primary Contact Name'] ?? 'Details'
   )
+
+  async function handleDocUpload(docKey: 'W9' | 'Insurance COI', file: File) {
+    setUploading(docKey)
+    setUploadError('')
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('name', docKey === 'W9' ? 'w9' : 'insurance')
+      const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd })
+      if (!uploadRes.ok) throw new Error('Upload failed')
+      const { url } = await uploadRes.json() as { url: string }
+
+      // Update the General Notes field with the new URL
+      const currentNotes = String(record.fields['General Notes'] ?? '')
+      const label = docKey === 'W9' ? 'W9' : 'Insurance COI'
+      const updatedNotes = currentNotes.match(new RegExp(`${label}:`, 'i'))
+        ? currentNotes.replace(new RegExp(`${label}:.*`, 'i'), `${label}: ${url}`)
+        : currentNotes + `\n${label}: ${url}`
+
+      // Also update the status field
+      const statusField = docKey === 'W9' ? 'W9 Status' : 'Insurance Verification Status'
+      const statusValue = docKey === 'W9' ? 'Received' : 'Verified'
+
+      const patchRes = await fetch('/api/airtable', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tab: 'contractors',
+          recordId: record.id,
+          fields: { 'General Notes': updatedNotes, [statusField]: statusValue },
+        }),
+      })
+      if (!patchRes.ok) throw new Error('Failed to save')
+      onRecordUpdated?.(record.id, { 'General Notes': updatedNotes, [statusField]: statusValue })
+    } catch (e) {
+      setUploadError((e as Error).message)
+    } finally {
+      setUploading(null)
+    }
+  }
+
+  const notes = String(record.fields['General Notes'] ?? '')
+  const hasW9 = /W9:\s*https?:\/\//i.test(notes)
+  const hasCOI = /Insurance COI:\s*https?:\/\//i.test(notes)
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
@@ -342,6 +390,42 @@ function RecordDetailModal({ record, cols, onClose }: { record: AirtableRecord; 
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
         </div>
         <div className="overflow-y-auto px-6 py-4 flex flex-col gap-3">
+
+          {/* Document upload section */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-3">Upload Documents</p>
+            <div className="flex flex-col gap-2">
+              {/* W9 */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${hasW9 ? 'bg-green-500' : 'bg-red-400'}`} />
+                  <span className="text-sm font-medium text-gray-700">W9 Form</span>
+                  {hasW9 && <span className="text-xs text-green-600 font-medium">✓ Uploaded</span>}
+                </div>
+                <label className="cursor-pointer bg-white border border-blue-300 hover:bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+                  {uploading === 'W9' ? 'Uploading...' : hasW9 ? 'Replace' : '+ Upload'}
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleDocUpload('W9', f) }} />
+                </label>
+              </div>
+              {/* Insurance COI */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${hasCOI ? 'bg-green-500' : 'bg-red-400'}`} />
+                  <span className="text-sm font-medium text-gray-700">Certificate of Insurance (COI)</span>
+                  {hasCOI && <span className="text-xs text-green-600 font-medium">✓ Uploaded</span>}
+                </div>
+                <label className="cursor-pointer bg-white border border-blue-300 hover:bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+                  {uploading === 'Insurance COI' ? 'Uploading...' : hasCOI ? 'Replace' : '+ Upload'}
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleDocUpload('Insurance COI', f) }} />
+                </label>
+              </div>
+              {uploadError && <p className="text-red-500 text-xs mt-1">{uploadError}</p>}
+            </div>
+          </div>
+
+          {/* All fields */}
           {cols.map((col, i) => (
             <div key={col.key + col.label + i}>
               <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">{col.label}</label>
@@ -693,6 +777,10 @@ export default function CRM() {
           record={viewingRecord}
           cols={cols}
           onClose={() => setViewingRecord(null)}
+          onRecordUpdated={(id, fields) => {
+            setRecords(r => r.map(rec => rec.id === id ? { ...rec, fields: { ...rec.fields, ...fields } } : rec))
+            setViewingRecord(prev => prev && prev.id === id ? { ...prev, fields: { ...prev.fields, ...fields } } : prev)
+          }}
         />
       )}
     </div>
