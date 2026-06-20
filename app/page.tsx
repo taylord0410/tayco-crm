@@ -150,20 +150,23 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
 }
 
 function TagsCell({ value, compact = true, onOpenDetail, highlight }: { value: unknown; compact?: boolean; onOpenDetail?: () => void; highlight?: string }) {
-  const raw = Array.isArray(value) ? value as string[] : [String(value)]
-  // When a trade filter is active, show the matching trade first
-  const arr = highlight
-    ? [...raw].sort((a, b) => {
-        const aMatch = a.toLowerCase().includes(highlight.toLowerCase())
-        const bMatch = b.toLowerCase().includes(highlight.toLowerCase())
-        return aMatch === bMatch ? 0 : aMatch ? -1 : 1
-      })
-    : raw
+  const arr = Array.isArray(value) ? value as string[] : [String(value)]
   if (!compact) {
     return <div className="flex flex-wrap gap-1">{arr.map((v, i) => <TagBadge key={i} value={v} />)}</div>
   }
+  // When a trade filter is active, show ONLY the matching badge + count of the rest
+  if (highlight) {
+    const match = arr.find(t => t.toLowerCase().includes(highlight.toLowerCase())) ?? arr[0]
+    const rest = arr.length - 1
+    return (
+      <div className="flex items-center gap-1 cursor-pointer" onClick={onOpenDetail} title="Click to view full details">
+        <TagBadge value={match} />
+        {rest > 0 && <span className="text-xs text-blue-500 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">+{rest}</span>}
+      </div>
+    )
+  }
   return (
-    <div className="flex flex-wrap items-center gap-1 cursor-pointer" onClick={onOpenDetail} title="Click to view full details">
+    <div className="flex items-center gap-1 cursor-pointer" onClick={onOpenDetail} title="Click to view full details">
       <TagBadge value={arr[0]} />
       {arr.length > 1 && (
         <span className="text-xs text-blue-500 hover:text-blue-700 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">+{arr.length - 1}</span>
@@ -193,7 +196,7 @@ function TagBadge({ value }: { value: string }) {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mr-1 mb-0.5 ${cls}`}>{value}</span>
 }
 
-function ReadCell({ col, value, record, compact = true, onOpenDetail }: { col: ColDef; value: unknown; record?: Record<string, unknown>; compact?: boolean; onOpenDetail?: () => void }) {
+function ReadCell({ col, value, record, compact = true, onOpenDetail, highlight }: { col: ColDef; value: unknown; record?: Record<string, unknown>; compact?: boolean; onOpenDetail?: () => void; highlight?: string }) {
   if (col.type === 'notes_field') {
     const src = col.notesSource ?? 'General Notes'
     const extracted = extractFromNotes(record?.[src], col.notesKey ?? col.label)
@@ -208,7 +211,7 @@ function ReadCell({ col, value, record, compact = true, onOpenDetail }: { col: C
   }
   if (value == null || value === '') return <span className="text-gray-300">—</span>
   if (col.type === 'status') return <StatusBadge value={String(value)} />
-  if (col.type === 'tags') return <TagsCell value={value} compact={compact} onOpenDetail={onOpenDetail} />
+  if (col.type === 'tags') return <TagsCell value={value} compact={compact} onOpenDetail={onOpenDetail} highlight={highlight} />
   if (col.type === 'currency') {
     const n = Number(value)
     return <span>${isNaN(n) ? String(value) : n.toLocaleString()}</span>
@@ -614,7 +617,7 @@ export default function CRM() {
                             <div className="h-8 flex items-center overflow-hidden">
                             {isEditing
                               ? <EditCell col={col} value={editFields[col.key]} onChange={v => setEditFields(p => ({ ...p, [col.key]: v }))} />
-                              : <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} />
+                              : <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} highlight={col.type === 'tags' && tradeFilter ? tradeFilter : undefined} />
                             }
                             </div>
                           </td>
