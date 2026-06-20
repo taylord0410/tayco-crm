@@ -149,8 +149,16 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
   ],
 }
 
-function TagsCell({ value, compact = true, onOpenDetail }: { value: unknown; compact?: boolean; onOpenDetail?: () => void }) {
-  const arr = Array.isArray(value) ? value as string[] : [String(value)]
+function TagsCell({ value, compact = true, onOpenDetail, highlight }: { value: unknown; compact?: boolean; onOpenDetail?: () => void; highlight?: string }) {
+  const raw = Array.isArray(value) ? value as string[] : [String(value)]
+  // When a trade filter is active, show the matching trade first
+  const arr = highlight
+    ? [...raw].sort((a, b) => {
+        const aMatch = a.toLowerCase().includes(highlight.toLowerCase())
+        const bMatch = b.toLowerCase().includes(highlight.toLowerCase())
+        return aMatch === bMatch ? 0 : aMatch ? -1 : 1
+      })
+    : raw
   if (!compact) {
     return <div className="flex flex-wrap gap-1">{arr.map((v, i) => <TagBadge key={i} value={v} />)}</div>
   }
@@ -466,9 +474,10 @@ export default function CRM() {
   const tradeFiltered = tradeFilter
     ? tabRecords.filter(r => {
         const trades = r.fields['Types of Work/Trades']
-        return Array.isArray(trades)
-          ? trades.some((t: unknown) => String(t).toLowerCase().includes(tradeFilter.toLowerCase()))
-          : String(trades ?? '').toLowerCase().includes(tradeFilter.toLowerCase())
+        const tradeArr = Array.isArray(trades) ? trades as string[] : []
+        // Filter by primary trade (first listed) — so "Roofing" only shows true roofers
+        const primary = (tradeArr[0] ?? '').toLowerCase()
+        return primary.includes(tradeFilter.toLowerCase())
       })
     : tabRecords
   const filtered = search
