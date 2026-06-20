@@ -478,9 +478,7 @@ export default function CRM() {
     ? tabRecords.filter(r => {
         const trades = r.fields['Types of Work/Trades']
         const tradeArr = Array.isArray(trades) ? trades as string[] : []
-        // Filter by primary trade (first listed) — so "Roofing" only shows true roofers
-        const primary = (tradeArr[0] ?? '').toLowerCase()
-        return primary.includes(tradeFilter.toLowerCase())
+        return tradeArr.some(t => t.toLowerCase().includes(tradeFilter.toLowerCase()))
       })
     : tabRecords
   const filtered = search
