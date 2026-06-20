@@ -360,6 +360,7 @@ export default function CRM() {
   const [showNew, setShowNew]       = useState(false)
   const [viewingRecord, setViewingRecord] = useState<AirtableRecord | null>(null)
   const [search, setSearch]         = useState('')
+  const [tradeFilter, setTradeFilter] = useState('')
   const [actioning, setActioning]   = useState<string | null>(null)
 
   const loadRecords = useCallback(async (tab: TabId) => {
@@ -460,9 +461,19 @@ export default function CRM() {
     : activeTab === 'contractors'
     ? records.filter(r => String(r.fields['Approval Status'] ?? '') !== 'Approved')
     : records
-  const filtered = search
-    ? tabRecords.filter(r => Object.values(r.fields).some(v => String(v ?? '').toLowerCase().includes(search.toLowerCase())))
+  const isTradeTab = activeTab === 'contractors' || activeTab === 'approved'
+  const TRADE_OPTIONS = ['Roofing','Drywall','Painting','Flooring','Cleaning','HVAC','Concrete','Masonry','Tile','Insulation','Windows','Glass Installation','Demolition','Waterproofing','Framing','Plumbing','Electrical','Carpentry','Welding','Landscaping','General Labor','Other']
+  const tradeFiltered = tradeFilter
+    ? tabRecords.filter(r => {
+        const trades = r.fields['Types of Work/Trades']
+        return Array.isArray(trades)
+          ? trades.some((t: unknown) => String(t).toLowerCase().includes(tradeFilter.toLowerCase()))
+          : String(trades ?? '').toLowerCase().includes(tradeFilter.toLowerCase())
+      })
     : tabRecords
+  const filtered = search
+    ? tradeFiltered.filter(r => Object.values(r.fields).some(v => String(v ?? '').toLowerCase().includes(search.toLowerCase())))
+    : tradeFiltered
 
   return (
     <div className="min-h-screen flex flex-col" style={{background: 'linear-gradient(180deg, #f0f7ff 0%, #e0f2fe 40%, #ffffff 100%)'}}>
@@ -487,7 +498,7 @@ export default function CRM() {
         <div className="max-w-screen-xl mx-auto px-4">
           <nav className="flex overflow-x-auto">
             {TABS.map(tab => (
-              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearch('') }}
+              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter('') }}
                 className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.id ? 'border-cyan-500 text-cyan-700 bg-cyan-50/60' : 'border-transparent text-gray-600 hover:text-cyan-700 hover:bg-cyan-50/40'
                 }`}
@@ -513,6 +524,41 @@ export default function CRM() {
           </button>
         </div>
       </div>
+
+      {/* Trade filter bar — only on Subcontractors and Approved Vendors */}
+      {isTradeTab && (
+        <div className="max-w-screen-xl mx-auto px-4 pb-3 w-full">
+          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Filter by Trade:</span>
+              <input
+                type="search"
+                placeholder="Type a trade (e.g. Roofing)..."
+                value={tradeFilter}
+                onChange={e => setTradeFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-52"
+              />
+              {tradeFilter && (
+                <button onClick={() => setTradeFilter('')} className="text-xs text-gray-400 hover:text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">
+                  Clear ✕
+                </button>
+              )}
+              <div className="flex flex-wrap gap-1.5 mt-1 w-full">
+                {TRADE_OPTIONS.map(t => (
+                  <button key={t} onClick={() => setTradeFilter(tradeFilter === t ? '' : t)}
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium border transition-all ${
+                      tradeFilter === t
+                        ? (TRADE_COLORS[t] ?? 'bg-blue-600 text-white') + ' border-transparent shadow'
+                        : 'border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600'
+                    }`}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="max-w-screen-xl mx-auto px-4 pb-8 w-full flex-1">
