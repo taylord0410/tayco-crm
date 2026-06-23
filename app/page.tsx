@@ -26,7 +26,6 @@ const STATUS_COLORS: Record<string, string> = {
   'Declined':        'bg-red-100 text-red-700',
   'Yes':             'bg-green-100 text-green-800',
   'No':              'bg-red-100 text-red-700',
-  'Declined':        'bg-red-100 text-red-700',
   'Voicemail':       'bg-yellow-100 text-yellow-700',
   'Not Contacted':   'bg-red-100 text-red-700',
   'Contacted':       'bg-green-100 text-green-800',
@@ -65,7 +64,7 @@ const TRADE_COLORS: Record<string, string> = {
   'Other':             'bg-gray-100 text-gray-700',
 }
 
-type ColDef = { key: string; label: string; type?: 'status' | 'tags' | 'date' | 'currency' | 'number' | 'notes_field' | 'notes_link'; notesKey?: string; notesSource?: string; options?: string[]; trades?: boolean }
+type ColDef = { key: string; label: string; type?: 'status' | 'tags' | 'date' | 'currency' | 'number' | 'notes_field' | 'notes_link' | 'email' | 'phone' | 'notes_text'; notesKey?: string; notesSource?: string; options?: string[]; trades?: boolean }
 
 function extractFromNotes(notes: unknown, key: string): string {
   const text = typeof notes === 'string' ? notes : ''
@@ -176,13 +175,13 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
   ],
   roofing: [
     { key: 'Company Name',    label: 'Company' },
-    { key: 'Phone',           label: 'Phone Number' },
-    { key: 'Email',           label: 'Email' },
-    { key: 'Contacted',       label: 'Contacted',   type: 'status', options: ['Pending','Yes','No'] },
+    { key: 'Phone',           label: 'Phone Number', type: 'phone' },
+    { key: 'Email',           label: 'Email',        type: 'email' },
+    { key: 'Contacted',       label: 'Contacted',    type: 'status', options: ['Pending','Yes','No'] },
     { key: 'Date Contacted',  label: 'Date Called',  type: 'date' },
-    { key: 'Response',        label: 'Call Notes' },
-    { key: 'Approval Status', label: 'Approval',    type: 'status', options: ['Pending','Approved','Declined'] },
-    { key: 'Notes',           label: 'City' },
+    { key: 'Response',        label: 'Call Notes',   type: 'notes_text' },
+    { key: 'Approval Status', label: 'Approval',     type: 'status', options: ['Pending','Approved','Declined'] },
+    { key: 'Notes',           label: 'City',         type: 'phone' },
   ],
   approved_roofing: [
     { key: 'Company Name',      label: 'Company' },
@@ -372,12 +371,30 @@ function EditCell({ col, value, onChange }: { col: ColDef; value: unknown; onCha
       />
     )
   }
+  if (col.type === 'email') {
+    return (
+      <input type="email"
+        className="w-full border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+        value={String(value ?? '')}
+        onChange={e => onChange(e.target.value.trim())}
+      />
+    )
+  }
+  if (col.type === 'notes_text') {
+    return (
+      <textarea
+        rows={2}
+        className="w-full border border-blue-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+        value={String(value ?? '')}
+        onChange={e => onChange(e.target.value)}
+      />
+    )
+  }
   return (
-    <textarea
-      rows={2}
-      className="w-full border border-blue-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+    <input type="text"
+      className="w-full border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
       value={String(value ?? '')}
-      onChange={e => onChange(e.target.value)}
+      onChange={e => onChange(e.target.value.trim())}
     />
   )
 }
