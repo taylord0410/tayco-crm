@@ -637,6 +637,12 @@ export default function CRM() {
                   {tab.label}
                 </button>
               ))}
+              <div className="border-t border-gray-100 mt-2 pt-2">
+                <Link href="/requests" onClick={() => setSidebarOpen(false)}
+                  className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all flex items-center gap-2">
+                  Vendor Requests
+                </Link>
+              </div>
             </nav>
           </div>
         </div>
@@ -655,31 +661,7 @@ export default function CRM() {
             <img src="/logo.jpeg" alt="Tayco LLC" className="h-10 w-10 rounded-lg object-contain border-2 border-white/30" />
             <span className="font-bold text-white text-lg tracking-wide">Tayco Operation System</span>
           </div>
-          <div className="flex items-center gap-3">
-            {/* Mode switcher */}
-            <div className="flex items-center bg-white/10 rounded-lg p-0.5">
-              <button
-                onClick={() => switchMode('operations')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  mode === 'operations' ? 'bg-white text-blue-800 shadow-sm' : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Operations
-              </button>
-              <button
-                onClick={() => switchMode('network')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  mode === 'network' ? 'bg-white text-blue-800 shadow-sm' : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Network
-              </button>
-            </div>
-            <Link href="/requests" className="text-sm text-white/90 hover:text-white font-medium bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">
-              Vendor Requests
-            </Link>
-            <span className="text-xs text-white/70">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-          </div>
+          <span className="text-xs text-white/70">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
         </div>
       </header>
 
