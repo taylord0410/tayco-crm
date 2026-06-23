@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 
 type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing'
@@ -246,27 +247,49 @@ function StatusBadge({ value }: { value: string }) {
 
 function InlineSelect({ value, options, onChange }: { value: unknown; options: string[]; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState<{top: number; left: number}>({top: 0, left: 0})
+  const btnRef = useRef<HTMLButtonElement>(null)
   const current = String(value ?? '')
-  const cls = STATUS_COLORS[current] ?? 'bg-gray-100 text-gray-600'
+  const cls = STATUS_COLORS[current] ?? 'bg-purple-100 text-purple-700'
+
+  useEffect(() => {
+    if (!open) return
+    function onDown(e: MouseEvent) {
+      if (!btnRef.current?.closest('[data-isel]')?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [open])
+
+  function handleToggle() {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 4, left: r.left })
+    }
+    setOpen(o => !o)
+  }
+
   return (
-    <div className="relative" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false) }}>
-      <button type="button" onClick={() => setOpen(o => !o)}
+    <div data-isel="" className="relative">
+      <button ref={btnRef} type="button" onClick={handleToggle}
         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${cls} border-2 border-transparent hover:border-blue-300 transition-all`}>
         {current || '— select —'} <span className="text-xs opacity-60">▾</span>
       </button>
-      {open && (
-        <div className="absolute z-50 top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 min-w-[160px]">
+      {open && typeof document !== 'undefined' && createPortal(
+        <div className="fixed z-[9999] bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 min-w-[180px]"
+          style={{top: pos.top, left: pos.left}}>
           {options.filter(o => o).map(o => {
             const oCls = STATUS_COLORS[o] ?? 'bg-gray-100 text-gray-600'
             return (
               <button key={o} type="button"
-                onMouseDown={() => { onChange(o); setOpen(false) }}
-                className={`w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-gray-50 transition-colors`}>
+                onMouseDown={e => { e.preventDefault(); onChange(o); setOpen(false) }}
+                className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-gray-50 transition-colors">
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${oCls}`}>{o}</span>
               </button>
             )
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
