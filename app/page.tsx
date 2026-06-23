@@ -460,6 +460,7 @@ function RecordDetailModal({ record, cols, onClose, onRecordUpdated }: { record:
 
 export default function CRM() {
   const [mode, setMode]             = useState<'operations' | 'network'>('operations')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab]   = useState<TabId>('leads')
   const [records, setRecords]       = useState<AirtableRecord[]>([])
   const [loading, setLoading]       = useState(true)
@@ -485,6 +486,7 @@ export default function CRM() {
   const loadRecords = useCallback(async (tab: TabId) => {
     setLoading(true)
     setError('')
+    setRecords([])
     setEditingId(null)
     try {
       const res = await fetch(`/api/airtable?tab=${tab}`)
@@ -595,10 +597,61 @@ export default function CRM() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{background: 'linear-gradient(180deg, #f0f7ff 0%, #e0f2fe 40%, #ffffff 100%)'}}>
+      {/* Sidebar overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
+          <div className="relative w-72 bg-white shadow-2xl flex flex-col z-50">
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{background: 'linear-gradient(90deg, #1e40af 0%, #0891b2 100%)'}}>
+              <span className="font-bold text-white text-base">Menu</span>
+              <button onClick={() => setSidebarOpen(false)} className="text-white/70 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            {/* Mode toggle inside sidebar */}
+            <div className="px-4 py-3 border-b bg-gray-50">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Mode</p>
+              <div className="flex gap-2">
+                <button onClick={() => { switchMode('operations'); setSidebarOpen(false) }}
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${mode === 'operations' ? 'bg-blue-600 text-white shadow' : 'bg-white border border-gray-300 text-gray-600 hover:border-blue-400'}`}>
+                  Operations
+                </button>
+                <button onClick={() => { switchMode('network'); setSidebarOpen(false) }}
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${mode === 'network' ? 'bg-cyan-600 text-white shadow' : 'bg-white border border-gray-300 text-gray-600 hover:border-cyan-400'}`}>
+                  Network
+                </button>
+              </div>
+            </div>
+            {/* Tab navigation */}
+            <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 mb-1">
+                {mode === 'network' ? 'Network' : 'Operations'}
+              </p>
+              {(mode === 'network' ? NETWORK_TABS : OPERATIONS_TABS).map(tab => (
+                <button key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter(''); setSidebarOpen(false) }}
+                  className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header style={{background: 'linear-gradient(90deg, #1e40af 0%, #0891b2 60%, #06b6d4 100%)'}} className="shadow-md">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            {/* Hamburger */}
+            <button onClick={() => setSidebarOpen(true)} className="flex flex-col gap-1.5 p-1.5 rounded-lg hover:bg-white/10 transition-colors" aria-label="Open menu">
+              <span className="block w-5 h-0.5 bg-white rounded-full" />
+              <span className="block w-5 h-0.5 bg-white rounded-full" />
+              <span className="block w-5 h-0.5 bg-white rounded-full" />
+            </button>
             <img src="/logo.jpeg" alt="Tayco LLC" className="h-10 w-10 rounded-lg object-contain border-2 border-white/30" />
             <span className="font-bold text-white text-lg tracking-wide">Tayco Operation System</span>
           </div>
@@ -709,7 +762,33 @@ export default function CRM() {
               Loading...
             </div>
           )}
-          {error && <div className="p-6 text-red-600 text-sm"><strong>Error:</strong> {error}</div>}
+          {error && (
+            activeTab === 'network' ? (
+              <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+                <div className="text-5xl mb-4">🏗️</div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Network Companies table not set up yet</h3>
+                <p className="text-gray-500 text-sm max-w-md mb-4">
+                  You need to create a table called <strong>"Network Companies"</strong> in your Airtable base first.
+                </p>
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-left text-sm text-blue-800 max-w-md">
+                  <p className="font-semibold mb-2">Columns to add:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li>• <strong>Business Name</strong> (Single line text)</li>
+                    <li>• <strong>Contact Name</strong> (Single line text)</li>
+                    <li>• <strong>Contact Phone</strong> (Single line text)</li>
+                    <li>• <strong>Contact Email</strong> (Email)</li>
+                    <li>• <strong>Network Type</strong> (Single select: Labor, Referrals, Materials, Staffing, Other)</li>
+                    <li>• <strong>States Covered</strong> (Single line text)</li>
+                    <li>• <strong>Services</strong> (Long text)</li>
+                    <li>• <strong>Status</strong> (Single select: Active, Inactive, In Talks)</li>
+                    <li>• <strong>Notes</strong> (Long text)</li>
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 text-red-600 text-sm"><strong>Error:</strong> {error}</div>
+            )
+          )}
           {!loading && !error && (
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
