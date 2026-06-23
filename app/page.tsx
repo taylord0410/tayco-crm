@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 
-type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network'
+type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing'
 type AirtableRecord = { id: string; fields: Record<string, unknown> }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -158,6 +158,27 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Status',          label: 'Status', type: 'status', options: ['Active','Inactive','In Talks'] },
     { key: 'Notes',           label: 'Notes' },
   ],
+  roofing: [
+    { key: 'Company Name',    label: 'Company' },
+    { key: 'Contact Name',    label: 'Contact' },
+    { key: 'Phone',           label: 'Phone' },
+    { key: 'Email',           label: 'Email' },
+    { key: 'Contacted',       label: 'Contacted',  type: 'status', options: ['Pending','Yes','No'] },
+    { key: 'Date Contacted',  label: 'Date Called', type: 'date' },
+    { key: 'Response',        label: 'Response',   type: 'status', options: ['No Response','Interested','Not Interested','In Progress'] },
+    { key: 'Approval Status', label: 'Approval',   type: 'status', options: ['Pending','Approved','Declined'] },
+    { key: 'Notes',           label: 'Notes' },
+  ],
+  approved_roofing: [
+    { key: 'Company Name',      label: 'Company' },
+    { key: 'Contact Name',      label: 'Contact' },
+    { key: 'Phone',             label: 'Phone' },
+    { key: 'Email',             label: 'Email' },
+    { key: 'Approval Date',     label: 'Approved On', type: 'date' },
+    { key: 'Projects Received', label: 'Projects',    type: 'number' },
+    { key: 'Last Project Date', label: 'Last Project',type: 'date' },
+    { key: 'Notes',             label: 'Notes' },
+  ],
 }
 
 function TagsCell({ value, compact = true, onOpenDetail, highlight }: { value: unknown; compact?: boolean; onOpenDetail?: () => void; highlight?: string }) {
@@ -187,14 +208,16 @@ function TagsCell({ value, compact = true, onOpenDetail, highlight }: { value: u
 }
 
 const OPERATIONS_TABS = [
-  { id: 'leads'       as TabId, label: 'Company Leads' },
-  { id: 'investors'   as TabId, label: 'Investor Leads' },
-  { id: 'estimates'   as TabId, label: 'Estimate Requests' },
-  { id: 'clients'     as TabId, label: 'Active Clients' },
-  { id: 'contractors' as TabId, label: 'Subcontractors' },
-  { id: 'approved'    as TabId, label: '✓ Approved Vendors' },
-  { id: 'orders'      as TabId, label: 'Work Orders' },
-  { id: 'assignments' as TabId, label: 'Assignments' },
+  { id: 'leads'            as TabId, label: 'Company Leads' },
+  { id: 'investors'        as TabId, label: 'Investor Leads' },
+  { id: 'estimates'        as TabId, label: 'Estimate Requests' },
+  { id: 'clients'          as TabId, label: 'Active Clients' },
+  { id: 'contractors'      as TabId, label: 'Subcontractors' },
+  { id: 'approved'         as TabId, label: '✓ Approved Vendors' },
+  { id: 'orders'           as TabId, label: 'Work Orders' },
+  { id: 'assignments'      as TabId, label: 'Assignments' },
+  { id: 'roofing'          as TabId, label: 'Roofing Companies' },
+  { id: 'approved_roofing' as TabId, label: '✓ Approved Roofing' },
 ]
 
 const NETWORK_TABS = [
@@ -580,6 +603,10 @@ export default function CRM() {
     : activeTab === 'approved'
     ? records.filter(r => String(r.fields['Approval Status'] ?? '') === 'Approved')
     : activeTab === 'contractors'
+    ? records.filter(r => String(r.fields['Approval Status'] ?? '') !== 'Approved')
+    : activeTab === 'approved_roofing'
+    ? records.filter(r => String(r.fields['Approval Status'] ?? '') === 'Approved')
+    : activeTab === 'roofing'
     ? records.filter(r => String(r.fields['Approval Status'] ?? '') !== 'Approved')
     : records
   const isTradeTab = activeTab === 'contractors' || activeTab === 'approved'

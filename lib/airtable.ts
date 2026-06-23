@@ -1,18 +1,20 @@
-export type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network'
+export type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing'
 
 const airtableApiKey = process.env.AIRTABLE_API_KEY || ''
 const airtableBaseId = process.env.AIRTABLE_BASE_ID || ''
 
 export const airtableTableNames: Record<TabId, string> = {
-  leads:       process.env.AIRTABLE_TABLE_LEADS        || 'Company Leads',
-  investors:   process.env.AIRTABLE_TABLE_LEADS        || 'Company Leads',
-  clients:     process.env.AIRTABLE_TABLE_CLIENTS      || 'Active Clients',
-  contractors: process.env.AIRTABLE_TABLE_CONTRACTORS  || 'Subcontractors',
-  orders:      process.env.AIRTABLE_TABLE_ORDERS       || 'work orders',
-  assignments: process.env.AIRTABLE_TABLE_ASSIGNMENTS  || 'Assignments',
-  estimates:   process.env.AIRTABLE_TABLE_LEADS        || 'Company Leads',
-  approved:    process.env.AIRTABLE_TABLE_CONTRACTORS  || 'Subcontractors',
-  network:     process.env.AIRTABLE_TABLE_NETWORK      || 'Network Companies',
+  leads:            process.env.AIRTABLE_TABLE_LEADS        || 'Company Leads',
+  investors:        process.env.AIRTABLE_TABLE_LEADS        || 'Company Leads',
+  clients:          process.env.AIRTABLE_TABLE_CLIENTS      || 'Active Clients',
+  contractors:      process.env.AIRTABLE_TABLE_CONTRACTORS  || 'Subcontractors',
+  orders:           process.env.AIRTABLE_TABLE_ORDERS       || 'work orders',
+  assignments:      process.env.AIRTABLE_TABLE_ASSIGNMENTS  || 'Assignments',
+  estimates:        process.env.AIRTABLE_TABLE_LEADS        || 'Company Leads',
+  approved:         process.env.AIRTABLE_TABLE_CONTRACTORS  || 'Subcontractors',
+  network:          process.env.AIRTABLE_TABLE_NETWORK      || 'Network Companies',
+  roofing:          'Roofing Companies',
+  approved_roofing: 'Roofing Companies',
 }
 
 export function getAirtableTableName(tab: TabId) {
