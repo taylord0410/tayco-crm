@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 
-type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates'
+type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network'
 type AirtableRecord = { id: string; fields: Record<string, unknown> }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -147,6 +147,17 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Lead Notes',           label: 'Description', type: 'notes_field', notesKey: 'Description', notesSource: 'Lead Notes' },
     { key: 'status',               label: 'Status',      type: 'status', options: ['Pending','Qualified','no contact'] },
   ],
+  network: [
+    { key: 'Business Name',   label: 'Company' },
+    { key: 'Contact Name',    label: 'Contact' },
+    { key: 'Contact Phone',   label: 'Phone' },
+    { key: 'Contact Email',   label: 'Email' },
+    { key: 'Network Type',    label: 'Network Type', type: 'tags', options: ['Labor','Referrals','Materials','Staffing','Other'] },
+    { key: 'States Covered',  label: 'States' },
+    { key: 'Services',        label: 'Services' },
+    { key: 'Status',          label: 'Status', type: 'status', options: ['Active','Inactive','In Talks'] },
+    { key: 'Notes',           label: 'Notes' },
+  ],
 }
 
 function TagsCell({ value, compact = true, onOpenDetail, highlight }: { value: unknown; compact?: boolean; onOpenDetail?: () => void; highlight?: string }) {
@@ -175,7 +186,7 @@ function TagsCell({ value, compact = true, onOpenDetail, highlight }: { value: u
   )
 }
 
-const TABS = [
+const OPERATIONS_TABS = [
   { id: 'leads'       as TabId, label: 'Company Leads' },
   { id: 'investors'   as TabId, label: 'Investor Leads' },
   { id: 'estimates'   as TabId, label: 'Estimate Requests' },
@@ -184,6 +195,10 @@ const TABS = [
   { id: 'approved'    as TabId, label: '✓ Approved Vendors' },
   { id: 'orders'      as TabId, label: 'Work Orders' },
   { id: 'assignments' as TabId, label: 'Assignments' },
+]
+
+const NETWORK_TABS = [
+  { id: 'network' as TabId, label: 'Network Companies' },
 ]
 
 function StatusBadge({ value }: { value: string }) {
@@ -444,6 +459,7 @@ function RecordDetailModal({ record, cols, onClose, onRecordUpdated }: { record:
 }
 
 export default function CRM() {
+  const [mode, setMode]             = useState<'operations' | 'network'>('operations')
   const [activeTab, setActiveTab]   = useState<TabId>('leads')
   const [records, setRecords]       = useState<AirtableRecord[]>([])
   const [loading, setLoading]       = useState(true)
@@ -457,6 +473,14 @@ export default function CRM() {
   const [search, setSearch]         = useState('')
   const [tradeFilter, setTradeFilter] = useState('')
   const [actioning, setActioning]   = useState<string | null>(null)
+
+  function switchMode(m: 'operations' | 'network') {
+    setMode(m)
+    setActiveTab(m === 'network' ? 'network' : 'leads')
+    setSearch('')
+    setTradeFilter('')
+    setEditingId(null)
+  }
 
   const loadRecords = useCallback(async (tab: TabId) => {
     setLoading(true)
@@ -578,7 +602,26 @@ export default function CRM() {
             <img src="/logo.jpeg" alt="Tayco LLC" className="h-10 w-10 rounded-lg object-contain border-2 border-white/30" />
             <span className="font-bold text-white text-lg tracking-wide">Tayco Operation System</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Mode switcher */}
+            <div className="flex items-center bg-white/10 rounded-lg p-0.5">
+              <button
+                onClick={() => switchMode('operations')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  mode === 'operations' ? 'bg-white text-blue-800 shadow-sm' : 'text-white/80 hover:text-white'
+                }`}
+              >
+                Operations
+              </button>
+              <button
+                onClick={() => switchMode('network')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  mode === 'network' ? 'bg-white text-blue-800 shadow-sm' : 'text-white/80 hover:text-white'
+                }`}
+              >
+                Network
+              </button>
+            </div>
             <Link href="/requests" className="text-sm text-white/90 hover:text-white font-medium bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">
               Vendor Requests
             </Link>
@@ -591,7 +634,7 @@ export default function CRM() {
       <div className="bg-white/80 backdrop-blur border-b border-blue-100 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4">
           <nav className="flex overflow-x-auto">
-            {TABS.map(tab => (
+            {(mode === 'network' ? NETWORK_TABS : OPERATIONS_TABS).map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter('') }}
                 className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.id ? 'border-cyan-500 text-cyan-700 bg-cyan-50/60' : 'border-transparent text-gray-600 hover:text-cyan-700 hover:bg-cyan-50/40'
@@ -605,7 +648,7 @@ export default function CRM() {
       {/* Toolbar */}
       <div className="max-w-screen-xl mx-auto px-4 py-4 w-full flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">{TABS.find(t => t.id === activeTab)?.label}</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{[...OPERATIONS_TABS, ...NETWORK_TABS].find(t => t.id === activeTab)?.label}</h2>
           <p className="text-sm text-gray-400">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-3">

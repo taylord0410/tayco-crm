@@ -1,4 +1,4 @@
-export type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates'
+export type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network'
 
 const airtableApiKey = process.env.AIRTABLE_API_KEY || ''
 const airtableBaseId = process.env.AIRTABLE_BASE_ID || ''
@@ -12,6 +12,7 @@ export const airtableTableNames: Record<TabId, string> = {
   assignments: process.env.AIRTABLE_TABLE_ASSIGNMENTS  || 'Assignments',
   estimates:   process.env.AIRTABLE_TABLE_LEADS        || 'Company Leads',
   approved:    process.env.AIRTABLE_TABLE_CONTRACTORS  || 'Subcontractors',
+  network:     process.env.AIRTABLE_TABLE_NETWORK      || 'Network Companies',
 }
 
 export function getAirtableTableName(tab: TabId) {
