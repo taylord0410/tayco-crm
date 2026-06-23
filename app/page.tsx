@@ -216,6 +216,9 @@ const OPERATIONS_TABS = [
   { id: 'approved'         as TabId, label: '✓ Approved Vendors' },
   { id: 'orders'           as TabId, label: 'Work Orders' },
   { id: 'assignments'      as TabId, label: 'Assignments' },
+]
+
+const ROOFING_TABS = [
   { id: 'roofing'          as TabId, label: 'Roofing Companies' },
   { id: 'approved_roofing' as TabId, label: '✓ Approved Roofing' },
 ]
@@ -649,22 +652,40 @@ export default function CRM() {
             </div>
             {/* Tab navigation */}
             <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 mb-1">
-                {mode === 'network' ? 'Network' : 'Operations'}
-              </p>
-              {(mode === 'network' ? NETWORK_TABS : OPERATIONS_TABS).map(tab => (
-                <button key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter(''); setSidebarOpen(false) }}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-              <div className="border-t border-gray-100 mt-2 pt-2">
+              {mode === 'network' ? (
+                <>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 mb-1">Network</p>
+                  {NETWORK_TABS.map(tab => (
+                    <button key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter(''); setSidebarOpen(false) }}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'}`}>
+                      {tab.label}
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 mb-1">Operations</p>
+                  {OPERATIONS_TABS.map(tab => (
+                    <button key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter(''); setSidebarOpen(false) }}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'}`}>
+                      {tab.label}
+                    </button>
+                  ))}
+                  <div className="border-t border-gray-100 mt-3 pt-3">
+                    <p className="text-xs font-semibold text-orange-400 uppercase tracking-wide px-2 mb-1">Roofing</p>
+                    {ROOFING_TABS.map(tab => (
+                      <button key={tab.id}
+                        onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter(''); setSidebarOpen(false) }}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-700 hover:bg-orange-50 hover:text-orange-700'}`}>
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <div className="border-t border-gray-100 mt-3 pt-2">
                 <Link href="/requests" onClick={() => setSidebarOpen(false)}
                   className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all flex items-center gap-2">
                   Vendor Requests
@@ -696,7 +717,7 @@ export default function CRM() {
       <div className="bg-white/80 backdrop-blur border-b border-blue-100 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4">
           <nav className="flex overflow-x-auto">
-            {(mode === 'network' ? NETWORK_TABS : OPERATIONS_TABS).map(tab => (
+            {(mode === 'network' ? NETWORK_TABS : [...OPERATIONS_TABS, ...ROOFING_TABS]).map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter('') }}
                 className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.id ? 'border-cyan-500 text-cyan-700 bg-cyan-50/60' : 'border-transparent text-gray-600 hover:text-cyan-700 hover:bg-cyan-50/40'
@@ -710,7 +731,7 @@ export default function CRM() {
       {/* Toolbar */}
       <div className="max-w-screen-xl mx-auto px-4 py-4 w-full flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">{[...OPERATIONS_TABS, ...NETWORK_TABS].find(t => t.id === activeTab)?.label}</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{[...OPERATIONS_TABS, ...ROOFING_TABS, ...NETWORK_TABS].find(t => t.id === activeTab)?.label}</h2>
           <p className="text-sm text-gray-400">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-3">
