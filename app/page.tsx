@@ -25,8 +25,13 @@ const STATUS_COLORS: Record<string, string> = {
   'Declined':        'bg-red-100 text-red-700',
   'Yes':             'bg-green-100 text-green-800',
   'No':              'bg-red-100 text-red-700',
-  'Voicemail':       'bg-purple-100 text-purple-700',
-  'Not Contacted':   'bg-gray-100 text-gray-500',
+  'Voicemail':       'bg-yellow-100 text-yellow-700',
+  'Not Contacted':   'bg-red-100 text-red-700',
+  'Contacted':       'bg-green-100 text-green-800',
+  'Left Voicemail':  'bg-yellow-100 text-yellow-800',
+  'Wrong Number':    'bg-orange-100 text-orange-800',
+  'Out of Service':  'bg-gray-200 text-gray-600',
+  'Not Approved':    'bg-red-100 text-red-700',
   'Interested':      'bg-green-100 text-green-800',
   'Not Interested':  'bg-red-100 text-red-700',
   'No Response':     'bg-gray-100 text-gray-500',
@@ -169,24 +174,22 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
   ],
   roofing: [
     { key: 'Company Name',    label: 'Company' },
-    { key: 'Contact Name',    label: 'Contact' },
-    { key: 'Phone',           label: 'Phone' },
+    { key: 'Phone',           label: 'Phone Number' },
     { key: 'Email',           label: 'Email' },
-    { key: 'Contacted',       label: 'Contacted',  type: 'status', options: ['Not Contacted','Yes','No','Voicemail'] },
-    { key: 'Date Contacted',  label: 'Date Called', type: 'date' },
-    { key: 'Response',        label: 'Response',   type: 'status', options: ['No Response','Interested','Not Interested','In Progress'] },
-    { key: 'Approval Status', label: 'Approval',   type: 'status', options: ['Pending','Approved','Declined'] },
-    { key: 'Notes',           label: 'Notes' },
+    { key: 'Contacted',       label: 'Contacted',   type: 'status', options: ['Not Contacted','Contacted','Left Voicemail','Wrong Number','Out of Service'] },
+    { key: 'Date Contacted',  label: 'Date Called',  type: 'date' },
+    { key: 'Response',        label: 'Call Notes' },
+    { key: 'Approval Status', label: 'Approval',    type: 'status', options: ['Pending','Approved','Not Approved'] },
+    { key: 'Notes',           label: 'City' },
   ],
   approved_roofing: [
     { key: 'Company Name',      label: 'Company' },
-    { key: 'Contact Name',      label: 'Contact' },
-    { key: 'Phone',             label: 'Phone' },
+    { key: 'Phone',             label: 'Phone Number' },
     { key: 'Email',             label: 'Email' },
-    { key: 'Approval Date',     label: 'Approved On', type: 'date' },
-    { key: 'Projects Received', label: 'Projects',    type: 'number' },
-    { key: 'Last Project Date', label: 'Last Project',type: 'date' },
-    { key: 'Notes',             label: 'Notes' },
+    { key: 'Contacted',         label: 'Contacted',  type: 'status', options: ['Not Contacted','Contacted','Left Voicemail','Wrong Number','Out of Service'] },
+    { key: 'Response',          label: 'Call Notes' },
+    { key: 'Approval Status',   label: 'Approval',   type: 'status', options: ['Pending','Approved','Not Approved'] },
+    { key: 'Notes',             label: 'City' },
   ],
 }
 
@@ -346,8 +349,9 @@ function EditCell({ col, value, onChange }: { col: ColDef; value: unknown; onCha
     )
   }
   return (
-    <input type="text"
-      className="w-full border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+    <textarea
+      rows={2}
+      className="w-full border border-blue-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
       value={String(value ?? '')}
       onChange={e => onChange(e.target.value)}
     />
@@ -944,7 +948,12 @@ export default function CRM() {
                                 </div>
                               ) : canInlineEdit ? (
                                 <div className="cursor-pointer w-full h-full flex items-center group"
-                                  onClick={() => setInlineEdit({id: rec.id, key: col.key, value: rec.fields[col.key]})}>
+                                  onClick={() => {
+                                    const prefill = col.type === 'date' && !rec.fields[col.key]
+                                      ? new Date().toISOString().split('T')[0]
+                                      : rec.fields[col.key]
+                                    setInlineEdit({id: rec.id, key: col.key, value: prefill})
+                                  }}>
                                   <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} highlight={col.type === 'tags' && tradeFilter ? tradeFilter : undefined} />
                                   {!rec.fields[col.key] && <span className="opacity-0 group-hover:opacity-100 text-blue-400 italic text-xs transition-opacity">edit</span>}
                                 </div>
