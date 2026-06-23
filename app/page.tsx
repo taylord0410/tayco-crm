@@ -907,7 +907,9 @@ export default function CRM() {
                         {col.label}
                       </th>
                     ))}
-                    <th className="px-2 py-2 text-right text-xs font-semibold text-white/70">Actions</th>
+                    {activeTab !== 'roofing' && activeTab !== 'approved_roofing' && (
+                      <th className="px-2 py-2 text-right text-xs font-semibold text-white/70">Actions</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -926,37 +928,34 @@ export default function CRM() {
                         {cols.map((col, ci) => {
                           const isInlineEditing = inlineEdit?.id === rec.id && inlineEdit?.key === col.key
                           const isRoofingTab = activeTab === 'roofing' || activeTab === 'approved_roofing'
-                          const canInlineEdit = isRoofingTab && !isEditing && col.type !== 'notes_link'
                           return (
                             <td key={col.key + ci} className="px-2 text-gray-700 text-xs" style={{height:'32px'}}>
                               <div className="h-8 flex items-center overflow-hidden">
                               {isEditing ? (
                                 <EditCell col={col} value={editFields[col.key]} onChange={v => setEditFields(p => ({ ...p, [col.key]: v }))} />
-                              ) : isInlineEditing ? (
-                                <div className="flex items-center gap-1" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) saveInline(rec.id, col.key, inlineEdit.value) }}>
-                                  {col.type === 'status' && col.options ? (
-                                    <InlineSelect value={inlineEdit.value} options={col.options}
-                                      onChange={v => saveInline(rec.id, col.key, v)} />
-                                  ) : (
-                                    <>
-                                      <EditCell col={col} value={inlineEdit.value}
-                                        onChange={v => setInlineEdit(p => p ? {...p, value: v} : null)} />
-                                      <button onMouseDown={() => saveInline(rec.id, col.key, inlineEdit.value)}
-                                        className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded shrink-0">✓</button>
-                                    </>
-                                  )}
-                                </div>
-                              ) : canInlineEdit ? (
-                                <div className="cursor-pointer w-full h-full flex items-center group"
-                                  onClick={() => {
-                                    const prefill = col.type === 'date' && !rec.fields[col.key]
-                                      ? new Date().toISOString().split('T')[0]
-                                      : rec.fields[col.key]
-                                    setInlineEdit({id: rec.id, key: col.key, value: prefill})
-                                  }}>
-                                  <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} highlight={col.type === 'tags' && tradeFilter ? tradeFilter : undefined} />
-                                  {!rec.fields[col.key] && <span className="opacity-0 group-hover:opacity-100 text-blue-400 italic text-xs transition-opacity">edit</span>}
-                                </div>
+                              ) : isRoofingTab && col.type === 'status' && col.options ? (
+                                <InlineSelect value={rec.fields[col.key]} options={col.options}
+                                  onChange={v => saveInline(rec.id, col.key, v)} />
+                              ) : isRoofingTab && col.type !== 'notes_link' ? (
+                                isInlineEditing ? (
+                                  <div className="flex items-center gap-1" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) saveInline(rec.id, col.key, inlineEdit!.value) }}>
+                                    <EditCell col={col} value={inlineEdit!.value}
+                                      onChange={v => setInlineEdit(p => p ? {...p, value: v} : null)} />
+                                    <button onMouseDown={() => saveInline(rec.id, col.key, inlineEdit!.value)}
+                                      className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded shrink-0">✓</button>
+                                  </div>
+                                ) : (
+                                  <div className="cursor-pointer w-full h-full flex items-center group"
+                                    onClick={() => {
+                                      const prefill = col.type === 'date' && !rec.fields[col.key]
+                                        ? new Date().toISOString().split('T')[0]
+                                        : rec.fields[col.key]
+                                      setInlineEdit({id: rec.id, key: col.key, value: prefill})
+                                    }}>
+                                    <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} highlight={undefined} />
+                                    {!rec.fields[col.key] && <span className="opacity-0 group-hover:opacity-100 text-blue-400 italic text-xs transition-opacity">edit</span>}
+                                  </div>
+                                )
                               ) : (
                                 <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} highlight={col.type === 'tags' && tradeFilter ? tradeFilter : undefined} />
                               )}
@@ -964,65 +963,51 @@ export default function CRM() {
                             </td>
                           )
                         })}
-                        <td className="px-2 text-right whitespace-nowrap" style={{height:'32px', overflow:'hidden'}}>
-                          <div className="h-8 flex items-center justify-end overflow-hidden">
-                          {isEditing ? (
-                            <div className="flex items-center justify-end gap-1">
-                              <button onClick={() => saveEdit(rec.id)} disabled={saving}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-2 py-0.5 rounded disabled:opacity-50">
-                                {saving ? '...' : 'Save'}
-                              </button>
-                              <button onClick={cancelEdit}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-2 py-0.5 rounded">
-                                Cancel
-                              </button>
+                        {activeTab !== 'roofing' && activeTab !== 'approved_roofing' && (
+                          <td className="px-2 text-right whitespace-nowrap" style={{height:'32px', overflow:'hidden'}}>
+                            <div className="h-8 flex items-center justify-end overflow-hidden">
+                            {isEditing ? (
+                              <div className="flex items-center justify-end gap-1">
+                                <button onClick={() => saveEdit(rec.id)} disabled={saving}
+                                  className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-2 py-0.5 rounded disabled:opacity-50">
+                                  {saving ? '...' : 'Save'}
+                                </button>
+                                <button onClick={cancelEdit}
+                                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-2 py-0.5 rounded">
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-end gap-2 flex-nowrap">
+                                {activeTab === 'contractors' && (() => {
+                                  const status = String(rec.fields['Approval Status'] ?? '')
+                                  const isPending = status === 'Pending' || status === 'Pending Review'
+                                  return isPending ? (
+                                    <>
+                                      <button onClick={() => handleApproveReject(rec.id, 'approve')} disabled={actioning !== null}
+                                        className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors">
+                                        {actioning === rec.id + 'approve' ? '...' : 'Approve'}
+                                      </button>
+                                      <button onClick={() => handleApproveReject(rec.id, 'reject')} disabled={actioning !== null}
+                                        className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors">
+                                        {actioning === rec.id + 'reject' ? '...' : 'Reject'}
+                                      </button>
+                                    </>
+                                  ) : null
+                                })()}
+                                <button onClick={() => startEdit(rec)}
+                                  className="text-blue-500 hover:text-blue-700 text-xs font-medium">
+                                  Edit
+                                </button>
+                                <button onClick={() => handleDelete(rec.id)} disabled={deleting === rec.id}
+                                  className="text-red-400 hover:text-red-600 text-xs font-medium disabled:opacity-40">
+                                  {deleting === rec.id ? '...' : 'Delete'}
+                                </button>
+                              </div>
+                            )}
                             </div>
-                          ) : (
-                            <div className="flex items-center justify-end gap-2 flex-nowrap">
-                              {activeTab === 'contractors' && (() => {
-                                const status = String(rec.fields['Approval Status'] ?? '')
-                                const isPending = status === 'Pending' || status === 'Pending Review'
-                                return isPending ? (
-                                  <>
-                                    <button onClick={() => handleApproveReject(rec.id, 'approve')} disabled={actioning !== null}
-                                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors">
-                                      {actioning === rec.id + 'approve' ? '...' : 'Approve'}
-                                    </button>
-                                    <button onClick={() => handleApproveReject(rec.id, 'reject')} disabled={actioning !== null}
-                                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors">
-                                      {actioning === rec.id + 'reject' ? '...' : 'Reject'}
-                                    </button>
-                                  </>
-                                ) : null
-                              })()}
-                              {activeTab === 'roofing' && (() => {
-                                const approval = String(rec.fields['Approval Status'] ?? '')
-                                const notApproved = approval !== 'Approved'
-                                return notApproved ? (
-                                  <>
-                                    <button onClick={() => handleRoofingAction(rec.id, 'approve_roofing')} disabled={actioning !== null}
-                                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-2 py-0.5 rounded disabled:opacity-40 transition-colors">
-                                      {actioning === rec.id + 'approve_roofing' ? '…' : '✓'}
-                                    </button>
-                                    <button onClick={() => handleRoofingAction(rec.id, 'decline_roofing')} disabled={actioning !== null}
-                                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-2 py-0.5 rounded disabled:opacity-40 transition-colors">
-                                      {actioning === rec.id + 'decline_roofing' ? '…' : '✕'}
-                                    </button>
-                                  </>
-                                ) : null
-                              })()}
-                              <button onClick={() => startEdit(rec)}
-                                className="text-blue-500 hover:text-blue-700 text-xs font-medium">
-                                Edit
-                              </button>
-                              <button onClick={() => handleDelete(rec.id)} disabled={deleting === rec.id}
-                                className="text-red-400 hover:text-red-600 text-xs font-medium disabled:opacity-40">
-                                {deleting === rec.id ? '...' : 'Delete'}
-                              </button>
-                            </div>
-                          )}
-                          </div>
-                        </td>
+                          </td>
+                        )}
                       </tr>
                     )
                   })}
