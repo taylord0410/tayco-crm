@@ -977,6 +977,22 @@ export default function CRM() {
                                   </>
                                 ) : null
                               })()}
+                              {activeTab === 'roofing' && (() => {
+                                const approval = String(rec.fields['Approval Status'] ?? '')
+                                const notApproved = approval !== 'Approved'
+                                return notApproved ? (
+                                  <>
+                                    <button onClick={() => handleRoofingAction(rec.id, 'approve_roofing')} disabled={actioning !== null}
+                                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors">
+                                      {actioning === rec.id + 'approve_roofing' ? '...' : 'Approve'}
+                                    </button>
+                                    <button onClick={() => handleRoofingAction(rec.id, 'decline_roofing')} disabled={actioning !== null}
+                                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors">
+                                      {actioning === rec.id + 'decline_roofing' ? '...' : 'Reject'}
+                                    </button>
+                                  </>
+                                ) : null
+                              })()}
                               <button onClick={() => startEdit(rec)}
                                 className="text-blue-500 hover:text-blue-700 text-xs font-medium">
                                 Edit
