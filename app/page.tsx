@@ -581,6 +581,28 @@ export default function CRM() {
     }
   }
 
+  async function handleRoofingAction(id: string, action: 'contacted' | 'not_contacted' | 'approve_roofing' | 'decline_roofing') {
+    setActioning(id + action)
+    const fields = action === 'contacted'      ? { 'Contacted': 'Yes' }
+                 : action === 'not_contacted'  ? { 'Contacted': 'No' }
+                 : action === 'approve_roofing'? { 'Approval Status': 'Approved' }
+                 :                              { 'Approval Status': 'Declined' }
+    try {
+      const res = await fetch('/api/airtable', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tab: 'roofing', recordId: id, fields }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setRecords(r => r.map(rec => rec.id === id ? { ...rec, fields: { ...rec.fields, ...fields } } : rec))
+    } catch (e) {
+      alert((e as Error).message)
+    } finally {
+      setActioning(null)
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!confirm('Delete this record?')) return
     setDeleting(id)
@@ -876,22 +898,36 @@ export default function CRM() {
                                 const isPending = status === 'Pending' || status === 'Pending Review'
                                 return isPending ? (
                                   <>
-                                    <button
-                                      onClick={() => handleApproveReject(rec.id, 'approve')}
-                                      disabled={actioning !== null}
-                                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors"
-                                    >
+                                    <button onClick={() => handleApproveReject(rec.id, 'approve')} disabled={actioning !== null}
+                                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors">
                                       {actioning === rec.id + 'approve' ? '...' : 'Approve'}
                                     </button>
-                                    <button
-                                      onClick={() => handleApproveReject(rec.id, 'reject')}
-                                      disabled={actioning !== null}
-                                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors"
-                                    >
+                                    <button onClick={() => handleApproveReject(rec.id, 'reject')} disabled={actioning !== null}
+                                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors">
                                       {actioning === rec.id + 'reject' ? '...' : 'Reject'}
                                     </button>
                                   </>
                                 ) : null
+                              })()}
+                              {activeTab === 'roofing' && (() => {
+                                const contacted = String(rec.fields['Contacted'] ?? '')
+                                const approval = String(rec.fields['Approval Status'] ?? '')
+                                return (
+                                  <>
+                                    {contacted !== 'Yes' && (
+                                      <button onClick={() => handleRoofingAction(rec.id, 'contacted')} disabled={actioning !== null}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap">
+                                        {actioning === rec.id + 'contacted' ? '...' : '✓ Contacted'}
+                                      </button>
+                                    )}
+                                    {contacted === 'Yes' && approval !== 'Approved' && (
+                                      <button onClick={() => handleRoofingAction(rec.id, 'approve_roofing')} disabled={actioning !== null}
+                                        className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap">
+                                        {actioning === rec.id + 'approve_roofing' ? '...' : '✓ Approved'}
+                                      </button>
+                                    )}
+                                  </>
+                                )
                               })()}
                               <button onClick={() => startEdit(rec)}
                                 className="text-blue-500 hover:text-blue-700 text-xs font-medium">
