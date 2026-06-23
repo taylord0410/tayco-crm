@@ -500,6 +500,7 @@ export default function CRM() {
   const [search, setSearch]         = useState('')
   const [tradeFilter, setTradeFilter] = useState('')
   const [actioning, setActioning]   = useState<string | null>(null)
+  const [inlineEdit, setInlineEdit] = useState<{id: string; key: string; value: unknown} | null>(null)
 
   function switchMode(m: 'operations' | 'network') {
     setMode(m)
@@ -601,6 +602,19 @@ export default function CRM() {
     } finally {
       setActioning(null)
     }
+  }
+
+  async function saveInline(id: string, key: string, value: unknown) {
+    setInlineEdit(null)
+    try {
+      const res = await fetch('/api/airtable', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tab: activeTab, recordId: id, fields: { [key]: value } }),
+      })
+      if (!res.ok) return
+      setRecords(r => r.map(rec => rec.id === id ? { ...rec, fields: { ...rec.fields, [key]: value } } : rec))
+    } catch {}
   }
 
   async function handleDelete(id: string) {
@@ -868,16 +882,41 @@ export default function CRM() {
                     return (
                       <tr key={rec.id} className={`transition-colors ${isEditing ? 'bg-blue-50' : i % 2 === 0 ? 'bg-white hover:bg-blue-50/40' : 'bg-blue-50/20 hover:bg-blue-50/50'}`}>
                         <td className="px-2 text-gray-300 text-xs" style={{height:'32px'}}><div className="h-8 flex items-center overflow-hidden">{i + 1}</div></td>
-                        {cols.map((col, ci) => (
-                          <td key={col.key + ci} className="px-2 text-gray-700 text-xs" style={{height:'32px'}}>
-                            <div className="h-8 flex items-center overflow-hidden">
-                            {isEditing
-                              ? <EditCell col={col} value={editFields[col.key]} onChange={v => setEditFields(p => ({ ...p, [col.key]: v }))} />
-                              : <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} highlight={col.type === 'tags' && tradeFilter ? tradeFilter : undefined} />
-                            }
-                            </div>
-                          </td>
-                        ))}
+                        {cols.map((col, ci) => {
+                          const isInlineEditing = inlineEdit?.id === rec.id && inlineEdit?.key === col.key
+                          const isRoofingTab = activeTab === 'roofing' || activeTab === 'approved_roofing'
+                          const canInlineEdit = isRoofingTab && !isEditing && col.type !== 'notes_link'
+                          return (
+                            <td key={col.key + ci} className="px-2 text-gray-700 text-xs" style={{height:'32px'}}>
+                              <div className="h-8 flex items-center overflow-hidden">
+                              {isEditing ? (
+                                <EditCell col={col} value={editFields[col.key]} onChange={v => setEditFields(p => ({ ...p, [col.key]: v }))} />
+                              ) : isInlineEditing ? (
+                                <div className="flex items-center gap-1" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) saveInline(rec.id, col.key, inlineEdit.value) }}>
+                                  <EditCell col={col} value={inlineEdit.value}
+                                    onChange={v => {
+                                      setInlineEdit(p => p ? {...p, value: v} : null)
+                                      if (col.type === 'status' || col.type === 'tags') saveInline(rec.id, col.key, v)
+                                    }}
+                                  />
+                                  {col.type !== 'status' && col.type !== 'tags' && (
+                                    <button onMouseDown={() => saveInline(rec.id, col.key, inlineEdit.value)}
+                                      className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded">✓</button>
+                                  )}
+                                </div>
+                              ) : canInlineEdit ? (
+                                <div className="cursor-pointer w-full h-full flex items-center group"
+                                  onClick={() => setInlineEdit({id: rec.id, key: col.key, value: rec.fields[col.key]})}>
+                                  <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} highlight={col.type === 'tags' && tradeFilter ? tradeFilter : undefined} />
+                                  {!rec.fields[col.key] && <span className="text-gray-300 italic text-xs group-hover:text-blue-400">click to edit</span>}
+                                </div>
+                              ) : (
+                                <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} highlight={col.type === 'tags' && tradeFilter ? tradeFilter : undefined} />
+                              )}
+                              </div>
+                            </td>
+                          )
+                        })}
                         <td className="px-2 text-right whitespace-nowrap" style={{height:'32px', overflow:'hidden'}}>
                           <div className="h-8 flex items-center justify-end overflow-hidden">
                           {isEditing ? (
