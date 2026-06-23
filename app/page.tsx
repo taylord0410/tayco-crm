@@ -232,6 +232,34 @@ function StatusBadge({ value }: { value: string }) {
   return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cls}`}>{value}</span>
 }
 
+function InlineSelect({ value, options, onChange }: { value: unknown; options: string[]; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const current = String(value ?? '')
+  const cls = STATUS_COLORS[current] ?? 'bg-gray-100 text-gray-600'
+  return (
+    <div className="relative" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false) }}>
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${cls} border-2 border-transparent hover:border-blue-300 transition-all`}>
+        {current || '— select —'} <span className="text-xs opacity-60">▾</span>
+      </button>
+      {open && (
+        <div className="absolute z-50 top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 min-w-[160px]">
+          {options.filter(o => o).map(o => {
+            const oCls = STATUS_COLORS[o] ?? 'bg-gray-100 text-gray-600'
+            return (
+              <button key={o} type="button"
+                onMouseDown={() => { onChange(o); setOpen(false) }}
+                className={`w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-gray-50 transition-colors`}>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${oCls}`}>{o}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function TagBadge({ value }: { value: string }) {
   const cls = TRADE_COLORS[value] ?? 'bg-gray-100 text-gray-700'
   return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mr-1 mb-0.5 ${cls}`}>{value}</span>
@@ -893,15 +921,16 @@ export default function CRM() {
                                 <EditCell col={col} value={editFields[col.key]} onChange={v => setEditFields(p => ({ ...p, [col.key]: v }))} />
                               ) : isInlineEditing ? (
                                 <div className="flex items-center gap-1" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) saveInline(rec.id, col.key, inlineEdit.value) }}>
-                                  <EditCell col={col} value={inlineEdit.value}
-                                    onChange={v => {
-                                      setInlineEdit(p => p ? {...p, value: v} : null)
-                                      if (col.type === 'status' || col.type === 'tags') saveInline(rec.id, col.key, v)
-                                    }}
-                                  />
-                                  {col.type !== 'status' && col.type !== 'tags' && (
-                                    <button onMouseDown={() => saveInline(rec.id, col.key, inlineEdit.value)}
-                                      className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded">✓</button>
+                                  {col.type === 'status' && col.options ? (
+                                    <InlineSelect value={inlineEdit.value} options={col.options}
+                                      onChange={v => saveInline(rec.id, col.key, v)} />
+                                  ) : (
+                                    <>
+                                      <EditCell col={col} value={inlineEdit.value}
+                                        onChange={v => setInlineEdit(p => p ? {...p, value: v} : null)} />
+                                      <button onMouseDown={() => saveInline(rec.id, col.key, inlineEdit.value)}
+                                        className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded shrink-0">✓</button>
+                                    </>
                                   )}
                                 </div>
                               ) : canInlineEdit ? (
@@ -947,26 +976,6 @@ export default function CRM() {
                                     </button>
                                   </>
                                 ) : null
-                              })()}
-                              {activeTab === 'roofing' && (() => {
-                                const contacted = String(rec.fields['Contacted'] ?? '')
-                                const approval = String(rec.fields['Approval Status'] ?? '')
-                                return (
-                                  <>
-                                    {contacted !== 'Yes' && (
-                                      <button onClick={() => handleRoofingAction(rec.id, 'contacted')} disabled={actioning !== null}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap">
-                                        {actioning === rec.id + 'contacted' ? '...' : '✓ Contacted'}
-                                      </button>
-                                    )}
-                                    {contacted === 'Yes' && approval !== 'Approved' && (
-                                      <button onClick={() => handleRoofingAction(rec.id, 'approve_roofing')} disabled={actioning !== null}
-                                        className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap">
-                                        {actioning === rec.id + 'approve_roofing' ? '...' : '✓ Approved'}
-                                      </button>
-                                    )}
-                                  </>
-                                )
                               })()}
                               <button onClick={() => startEdit(rec)}
                                 className="text-blue-500 hover:text-blue-700 text-xs font-medium">
