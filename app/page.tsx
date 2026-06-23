@@ -23,6 +23,15 @@ const STATUS_COLORS: Record<string, string> = {
   'Cancelled':       'bg-red-100 text-red-700',
   'Denied':          'bg-red-100 text-red-700',
   'Declined':        'bg-red-100 text-red-700',
+  'Yes':             'bg-green-100 text-green-800',
+  'No':              'bg-red-100 text-red-700',
+  'Voicemail':       'bg-purple-100 text-purple-700',
+  'Not Contacted':   'bg-gray-100 text-gray-500',
+  'Interested':      'bg-green-100 text-green-800',
+  'Not Interested':  'bg-red-100 text-red-700',
+  'No Response':     'bg-gray-100 text-gray-500',
+  'In Progress':     'bg-blue-100 text-blue-800',
+  'In Talks':        'bg-blue-100 text-blue-800',
 }
 
 const TRADE_COLORS: Record<string, string> = {
@@ -163,7 +172,7 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Contact Name',    label: 'Contact' },
     { key: 'Phone',           label: 'Phone' },
     { key: 'Email',           label: 'Email' },
-    { key: 'Contacted',       label: 'Contacted',  type: 'status', options: ['Pending','Yes','No'] },
+    { key: 'Contacted',       label: 'Contacted',  type: 'status', options: ['Not Contacted','Yes','No','Voicemail'] },
     { key: 'Date Contacted',  label: 'Date Called', type: 'date' },
     { key: 'Response',        label: 'Response',   type: 'status', options: ['No Response','Interested','Not Interested','In Progress'] },
     { key: 'Approval Status', label: 'Approval',   type: 'status', options: ['Pending','Approved','Declined'] },
@@ -937,7 +946,7 @@ export default function CRM() {
                                 <div className="cursor-pointer w-full h-full flex items-center group"
                                   onClick={() => setInlineEdit({id: rec.id, key: col.key, value: rec.fields[col.key]})}>
                                   <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} highlight={col.type === 'tags' && tradeFilter ? tradeFilter : undefined} />
-                                  {!rec.fields[col.key] && <span className="text-gray-300 italic text-xs group-hover:text-blue-400">click to edit</span>}
+                                  {!rec.fields[col.key] && <span className="opacity-0 group-hover:opacity-100 text-blue-400 italic text-xs transition-opacity">edit</span>}
                                 </div>
                               ) : (
                                 <ReadCell col={col} value={rec.fields[col.key]} record={rec.fields} onOpenDetail={() => setViewingRecord(rec)} highlight={col.type === 'tags' && tradeFilter ? tradeFilter : undefined} />
@@ -983,12 +992,12 @@ export default function CRM() {
                                 return notApproved ? (
                                   <>
                                     <button onClick={() => handleRoofingAction(rec.id, 'approve_roofing')} disabled={actioning !== null}
-                                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors">
-                                      {actioning === rec.id + 'approve_roofing' ? '...' : 'Approve'}
+                                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-2 py-0.5 rounded disabled:opacity-40 transition-colors">
+                                      {actioning === rec.id + 'approve_roofing' ? '…' : '✓'}
                                     </button>
                                     <button onClick={() => handleRoofingAction(rec.id, 'decline_roofing')} disabled={actioning !== null}
-                                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-40 transition-colors">
-                                      {actioning === rec.id + 'decline_roofing' ? '...' : 'Reject'}
+                                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-2 py-0.5 rounded disabled:opacity-40 transition-colors">
+                                      {actioning === rec.id + 'decline_roofing' ? '…' : '✕'}
                                     </button>
                                   </>
                                 ) : null
