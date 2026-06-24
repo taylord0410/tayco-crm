@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 
-type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing'
+type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing' | 'gc'
 type AirtableRecord = { id: string; fields: Record<string, unknown> }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -192,6 +192,16 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Approval Status',   label: 'Approval',   type: 'status', options: ['Pending','Approved','Declined'] },
     { key: 'Notes',             label: 'City' },
   ],
+  gc: [
+    { key: 'Company Name',    label: 'Company' },
+    { key: 'Phone',           label: 'Phone Number', type: 'phone' },
+    { key: 'Email',           label: 'Email',        type: 'email' },
+    { key: 'Contacted',       label: 'Contacted',    type: 'status', options: ['Pending','Yes','No'] },
+    { key: 'Date Contacted',  label: 'Date Called',  type: 'date' },
+    { key: 'Call Notes',      label: 'Call Notes',   type: 'notes_text' },
+    { key: 'Approval Status', label: 'Approval',     type: 'status', options: ['Pending','Approved','Declined'] },
+    { key: 'City',            label: 'City',         type: 'phone' },
+  ],
 }
 
 function TagsCell({ value, compact = true, onOpenDetail, highlight }: { value: unknown; compact?: boolean; onOpenDetail?: () => void; highlight?: string }) {
@@ -234,6 +244,10 @@ const OPERATIONS_TABS = [
 const ROOFING_TABS = [
   { id: 'roofing'          as TabId, label: 'Roofing Companies' },
   { id: 'approved_roofing' as TabId, label: '✓ Approved Roofing' },
+]
+
+const GC_TABS = [
+  { id: 'gc' as TabId, label: 'General Contractors' },
 ]
 
 const NETWORK_TABS = [
@@ -801,6 +815,16 @@ export default function CRM() {
                       </button>
                     ))}
                   </div>
+                  <div className="border-t border-gray-100 mt-3 pt-3">
+                    <p className="text-xs font-semibold text-emerald-500 uppercase tracking-wide px-2 mb-1">General Contractors</p>
+                    {GC_TABS.map(tab => (
+                      <button key={tab.id}
+                        onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter(''); setSidebarOpen(false) }}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'}`}>
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
                 </>
               )}
               <div className="border-t border-gray-100 mt-3 pt-2">
@@ -835,7 +859,7 @@ export default function CRM() {
       <div className="bg-white/80 backdrop-blur border-b border-blue-100 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4">
           <nav className="flex overflow-x-auto">
-            {(mode === 'network' ? NETWORK_TABS : [...OPERATIONS_TABS, ...ROOFING_TABS]).map(tab => (
+            {(mode === 'network' ? NETWORK_TABS : [...OPERATIONS_TABS, ...ROOFING_TABS, ...GC_TABS]).map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter('') }}
                 className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.id ? 'border-cyan-500 text-cyan-700 bg-cyan-50/60' : 'border-transparent text-gray-600 hover:text-cyan-700 hover:bg-cyan-50/40'
@@ -849,7 +873,7 @@ export default function CRM() {
       {/* Toolbar */}
       <div className="max-w-screen-xl mx-auto px-4 py-4 w-full flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">{[...OPERATIONS_TABS, ...ROOFING_TABS, ...NETWORK_TABS].find(t => t.id === activeTab)?.label}</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{[...OPERATIONS_TABS, ...ROOFING_TABS, ...GC_TABS, ...NETWORK_TABS].find(t => t.id === activeTab)?.label}</h2>
           <p className="text-sm text-gray-400">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -948,7 +972,7 @@ export default function CRM() {
                         {col.label}
                       </th>
                     ))}
-                    {activeTab !== 'roofing' && activeTab !== 'approved_roofing' && (
+                    {activeTab !== 'roofing' && activeTab !== 'approved_roofing' && activeTab !== 'gc' && (
                       <th className="px-2 py-2 text-right text-xs font-semibold text-white/70">Actions</th>
                     )}
                   </tr>
@@ -968,7 +992,7 @@ export default function CRM() {
                         <td className="px-2 text-gray-300 text-xs" style={{height:'32px'}}><div className="h-8 flex items-center overflow-hidden">{i + 1}</div></td>
                         {cols.map((col, ci) => {
                           const isInlineEditing = inlineEdit?.id === rec.id && inlineEdit?.key === col.key
-                          const isRoofingTab = activeTab === 'roofing' || activeTab === 'approved_roofing'
+                          const isRoofingTab = activeTab === 'roofing' || activeTab === 'approved_roofing' || activeTab === 'gc'
                           return (
                             <td key={col.key + ci} className="px-2 text-gray-700 text-xs" style={{height:'32px'}}>
                               <div className="h-8 flex items-center overflow-hidden">
@@ -1004,7 +1028,7 @@ export default function CRM() {
                             </td>
                           )
                         })}
-                        {activeTab !== 'roofing' && activeTab !== 'approved_roofing' && (
+                        {activeTab !== 'roofing' && activeTab !== 'approved_roofing' && activeTab !== 'gc' && (
                           <td className="px-2 text-right whitespace-nowrap" style={{height:'32px', overflow:'hidden'}}>
                             <div className="h-8 flex items-center justify-end overflow-hidden">
                             {isEditing ? (
