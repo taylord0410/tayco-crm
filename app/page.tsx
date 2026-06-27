@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 
-type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing' | 'gc'
+type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing' | 'gc' | 'gov_contracts'
 type AirtableRecord = { id: string; fields: Record<string, unknown> }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -33,6 +33,10 @@ const STATUS_COLORS: Record<string, string> = {
   'Wrong Number':    'bg-orange-100 text-orange-800',
   'Out of Service':  'bg-gray-200 text-gray-600',
   'Not Approved':    'bg-red-100 text-red-700',
+  'Not Applied':     'bg-gray-100 text-gray-500',
+  'Applied':         'bg-blue-100 text-blue-800',
+  'Registered':      'bg-yellow-100 text-yellow-800',
+  'Awarded':         'bg-green-100 text-green-800',
   'Interested':      'bg-green-100 text-green-800',
   'Not Interested':  'bg-red-100 text-red-700',
   'No Response':     'bg-gray-100 text-gray-500',
@@ -202,6 +206,16 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Approval Status', label: 'Approval',     type: 'status', options: ['Pending','Approved','Declined'] },
     { key: 'City',            label: 'City',         type: 'phone' },
   ],
+  gov_contracts: [
+    { key: 'City',     label: 'City' },
+    { key: 'State',    label: 'State' },
+    { key: 'Contact',  label: 'Contact' },
+    { key: 'Email',    label: 'Email',    type: 'email' },
+    { key: 'Phone',    label: 'Phone' },
+    { key: 'Platform', label: 'Platform' },
+    { key: 'Status',   label: 'Status',   type: 'status', options: ['Not Applied','Applied','Registered','Awarded'] },
+    { key: 'Notes',    label: 'Notes',    type: 'notes_text' },
+  ],
 }
 
 function TagsCell({ value, compact = true, onOpenDetail, highlight }: { value: unknown; compact?: boolean; onOpenDetail?: () => void; highlight?: string }) {
@@ -252,6 +266,10 @@ const GC_TABS = [
 
 const NETWORK_TABS = [
   { id: 'network' as TabId, label: 'Network Companies' },
+]
+
+const GOV_CONTRACTS_TABS = [
+  { id: 'gov_contracts' as TabId, label: 'Gov Contracts' },
 ]
 
 function StatusBadge({ value }: { value: string }) {
@@ -825,6 +843,16 @@ export default function CRM() {
                       </button>
                     ))}
                   </div>
+                  <div className="border-t border-gray-100 mt-3 pt-3">
+                    <p className="text-xs font-semibold text-violet-500 uppercase tracking-wide px-2 mb-1">🏛 Gov Contracts</p>
+                    {GOV_CONTRACTS_TABS.map(tab => (
+                      <button key={tab.id}
+                        onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter(''); setSidebarOpen(false) }}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-violet-600 text-white shadow-sm' : 'text-gray-700 hover:bg-violet-50 hover:text-violet-700'}`}>
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
                 </>
               )}
               <div className="border-t border-gray-100 mt-3 pt-2">
@@ -859,7 +887,7 @@ export default function CRM() {
       <div className="bg-white/80 backdrop-blur border-b border-blue-100 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4">
           <nav className="flex overflow-x-auto">
-            {(mode === 'network' ? NETWORK_TABS : [...OPERATIONS_TABS, ...ROOFING_TABS, ...GC_TABS]).map(tab => (
+            {(mode === 'network' ? NETWORK_TABS : [...OPERATIONS_TABS, ...ROOFING_TABS, ...GC_TABS, ...GOV_CONTRACTS_TABS]).map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter('') }}
                 className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.id ? 'border-cyan-500 text-cyan-700 bg-cyan-50/60' : 'border-transparent text-gray-600 hover:text-cyan-700 hover:bg-cyan-50/40'
@@ -873,7 +901,7 @@ export default function CRM() {
       {/* Toolbar */}
       <div className="max-w-screen-xl mx-auto px-4 py-4 w-full flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">{[...OPERATIONS_TABS, ...ROOFING_TABS, ...GC_TABS, ...NETWORK_TABS].find(t => t.id === activeTab)?.label}</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{[...OPERATIONS_TABS, ...ROOFING_TABS, ...GC_TABS, ...GOV_CONTRACTS_TABS, ...NETWORK_TABS].find(t => t.id === activeTab)?.label}</h2>
           <p className="text-sm text-gray-400">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -935,7 +963,28 @@ export default function CRM() {
             </div>
           )}
           {error && (
-            activeTab === 'network' ? (
+            activeTab === 'gov_contracts' ? (
+              <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+                <div className="text-5xl mb-4">🏛️</div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Gov Contracts table not set up yet</h3>
+                <p className="text-gray-500 text-sm max-w-md mb-4">
+                  Create a table called <strong>"Gov Contracts"</strong> in your Airtable base with these columns:
+                </p>
+                <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 text-left text-sm text-violet-800 max-w-md">
+                  <p className="font-semibold mb-2">Columns to add:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li>• <strong>City</strong> (Single line text)</li>
+                    <li>• <strong>State</strong> (Single line text)</li>
+                    <li>• <strong>Contact</strong> (Single line text)</li>
+                    <li>• <strong>Email</strong> (Email)</li>
+                    <li>• <strong>Phone</strong> (Phone number)</li>
+                    <li>• <strong>Platform</strong> (Single line text)</li>
+                    <li>• <strong>Status</strong> (Single select: Not Applied, Applied, Registered, Awarded)</li>
+                    <li>• <strong>Notes</strong> (Long text)</li>
+                  </ul>
+                </div>
+              </div>
+            ) : activeTab === 'network' ? (
               <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
                 <div className="text-5xl mb-4">🏗️</div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">Network Companies table not set up yet</h3>
@@ -972,7 +1021,7 @@ export default function CRM() {
                         {col.label}
                       </th>
                     ))}
-                    {activeTab !== 'roofing' && activeTab !== 'approved_roofing' && activeTab !== 'gc' && (
+                    {activeTab !== 'roofing' && activeTab !== 'approved_roofing' && activeTab !== 'gc' && activeTab !== 'gov_contracts' && (
                       <th className="px-2 py-2 text-right text-xs font-semibold text-white/70">Actions</th>
                     )}
                   </tr>
@@ -992,7 +1041,7 @@ export default function CRM() {
                         <td className="px-2 text-gray-300 text-xs" style={{height:'32px'}}><div className="h-8 flex items-center overflow-hidden">{i + 1}</div></td>
                         {cols.map((col, ci) => {
                           const isInlineEditing = inlineEdit?.id === rec.id && inlineEdit?.key === col.key
-                          const isRoofingTab = activeTab === 'roofing' || activeTab === 'approved_roofing' || activeTab === 'gc'
+                          const isRoofingTab = activeTab === 'roofing' || activeTab === 'approved_roofing' || activeTab === 'gc' || activeTab === 'gov_contracts'
                           return (
                             <td key={col.key + ci} className="px-2 text-gray-700 text-xs" style={{height:'32px'}}>
                               <div className="h-8 flex items-center overflow-hidden">

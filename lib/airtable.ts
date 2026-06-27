@@ -1,4 +1,4 @@
-export type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing' | 'gc'
+export type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing' | 'gc' | 'gov_contracts'
 
 const airtableApiKey = process.env.AIRTABLE_API_KEY || ''
 const airtableBaseId = process.env.AIRTABLE_BASE_ID || ''
@@ -16,6 +16,7 @@ export const airtableTableNames: Record<TabId, string> = {
   roofing:          'Roofing Companies',
   approved_roofing: 'Roofing Companies',
   gc:               'General Contractors',
+  gov_contracts:    'Gov Contracts',
 }
 
 export function getAirtableTableName(tab: TabId) {
