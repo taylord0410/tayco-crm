@@ -845,6 +845,10 @@ export default function CRM() {
                   </div>
                   <div className="border-t border-gray-100 mt-3 pt-3">
                     <p className="text-xs font-semibold text-violet-500 uppercase tracking-wide px-2 mb-1">🏛 Gov Contracts</p>
+                    <div className="mx-2 mb-2 px-3 py-2 bg-violet-50 border border-violet-100 rounded-lg">
+                      <p className="text-xs font-semibold text-violet-700 leading-snug">City Applications CRM</p>
+                      <p className="text-xs text-violet-500 leading-snug mt-0.5">Track & apply to all cities — select winners</p>
+                    </div>
                     {GOV_CONTRACTS_TABS.map(tab => (
                       <button key={tab.id}
                         onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter(''); setSidebarOpen(false) }}
