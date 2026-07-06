@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 
-type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing' | 'gc' | 'gov_contracts'
+type TabId = 'leads' | 'investors' | 'clients' | 'contractors' | 'approved' | 'orders' | 'assignments' | 'estimates' | 'network' | 'roofing' | 'approved_roofing' | 'gc' | 'gov_contracts' | 'bids'
 type AirtableRecord = { id: string; fields: Record<string, unknown> }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -206,6 +206,18 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Approval Status', label: 'Approval',     type: 'status', options: ['Pending','Approved','Declined'] },
     { key: 'City',            label: 'City',         type: 'phone' },
   ],
+  bids: [
+    { key: 'Project Name',   label: 'Project' },
+    { key: 'GC / Client',    label: 'GC / Client' },
+    { key: 'Location',       label: 'Location' },
+    { key: 'Trade',          label: 'Trade' },
+    { key: 'Total Price',    label: 'Total Price', type: 'currency' },
+    { key: 'Status',         label: 'Status', type: 'status', options: ['Pending', 'Submitted', 'Won', 'Lost'] },
+    { key: 'Bid Due Date',   label: 'Bid Due', type: 'date' },
+    { key: 'Date Submitted', label: 'Submitted', type: 'date' },
+    { key: 'PDF URL',        label: 'PDF' },
+    { key: 'Notes',          label: 'Notes' },
+  ],
   gov_contracts: [
     { key: 'City',     label: 'City' },
     { key: 'State',    label: 'State' },
@@ -270,6 +282,10 @@ const NETWORK_TABS = [
 
 const GOV_CONTRACTS_TABS = [
   { id: 'gov_contracts' as TabId, label: 'Gov Contracts' },
+]
+
+const BIDS_TABS = [
+  { id: 'bids' as TabId, label: '📋 Bids & Estimates' },
 ]
 
 function StatusBadge({ value }: { value: string }) {
@@ -844,6 +860,16 @@ export default function CRM() {
                     ))}
                   </div>
                   <div className="border-t border-gray-100 mt-3 pt-3">
+                    <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide px-2 mb-1">📋 Bids & Estimates</p>
+                    {BIDS_TABS.map(tab => (
+                      <button key={tab.id}
+                        onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter(''); setSidebarOpen(false) }}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-blue-700 text-white shadow-sm' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'}`}>
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-100 mt-3 pt-3">
                     <p className="text-xs font-semibold text-violet-500 uppercase tracking-wide px-2 mb-1">🏛 Gov Contracts</p>
                     <div className="mx-2 mb-2 px-3 py-2 bg-violet-50 border border-violet-100 rounded-lg">
                       <p className="text-xs font-semibold text-violet-700 leading-snug">City Applications CRM</p>
@@ -891,7 +917,7 @@ export default function CRM() {
       <div className="bg-white/80 backdrop-blur border-b border-blue-100 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4">
           <nav className="flex overflow-x-auto">
-            {(mode === 'network' ? NETWORK_TABS : [...OPERATIONS_TABS, ...ROOFING_TABS, ...GC_TABS, ...GOV_CONTRACTS_TABS]).map(tab => (
+            {(mode === 'network' ? NETWORK_TABS : [...OPERATIONS_TABS, ...ROOFING_TABS, ...GC_TABS, ...BIDS_TABS, ...GOV_CONTRACTS_TABS]).map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearch(''); setTradeFilter('') }}
                 className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.id ? 'border-cyan-500 text-cyan-700 bg-cyan-50/60' : 'border-transparent text-gray-600 hover:text-cyan-700 hover:bg-cyan-50/40'
@@ -905,7 +931,7 @@ export default function CRM() {
       {/* Toolbar */}
       <div className="max-w-screen-xl mx-auto px-4 py-4 w-full flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">{[...OPERATIONS_TABS, ...ROOFING_TABS, ...GC_TABS, ...GOV_CONTRACTS_TABS, ...NETWORK_TABS].find(t => t.id === activeTab)?.label}</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{[...OPERATIONS_TABS, ...ROOFING_TABS, ...GC_TABS, ...BIDS_TABS, ...GOV_CONTRACTS_TABS, ...NETWORK_TABS].find(t => t.id === activeTab)?.label}</h2>
           <p className="text-sm text-gray-400">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-3">
