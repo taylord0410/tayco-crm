@@ -68,7 +68,7 @@ const TRADE_COLORS: Record<string, string> = {
   'Other':             'bg-gray-100 text-gray-700',
 }
 
-type ColDef = { key: string; label: string; type?: 'status' | 'tags' | 'date' | 'currency' | 'number' | 'notes_field' | 'notes_link' | 'email' | 'phone' | 'notes_text'; notesKey?: string; notesSource?: string; options?: string[]; trades?: boolean }
+type ColDef = { key: string; label: string; type?: 'status' | 'tags' | 'date' | 'currency' | 'number' | 'notes_field' | 'notes_link' | 'email' | 'phone' | 'notes_text' | 'url'; notesKey?: string; notesSource?: string; options?: string[]; trades?: boolean }
 
 function extractFromNotes(notes: unknown, key: string): string {
   const text = typeof notes === 'string' ? notes : ''
@@ -183,18 +183,16 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Email',           label: 'Email',        type: 'email' },
     { key: 'Contacted',       label: 'Contacted',    type: 'status', options: ['Pending','Yes','No'] },
     { key: 'Date Contacted',  label: 'Date Called',  type: 'date' },
-    { key: 'Response',        label: 'Call Notes',   type: 'notes_text' },
     { key: 'Approval Status', label: 'Approval',     type: 'status', options: ['Pending','Approved','Declined'] },
-    { key: 'Notes',           label: 'City',         type: 'phone' },
+    { key: 'Notes',           label: 'Notes',        type: 'notes_text' },
   ],
   approved_roofing: [
     { key: 'Company Name',      label: 'Company' },
     { key: 'Phone',             label: 'Phone Number' },
     { key: 'Email',             label: 'Email' },
     { key: 'Contacted',         label: 'Contacted',  type: 'status', options: ['Pending','Yes','No'] },
-    { key: 'Response',          label: 'Call Notes' },
     { key: 'Approval Status',   label: 'Approval',   type: 'status', options: ['Pending','Approved','Declined'] },
-    { key: 'Notes',             label: 'City' },
+    { key: 'Notes',             label: 'Notes',      type: 'notes_text' },
   ],
   gc: [
     { key: 'Company Name',    label: 'Company' },
@@ -215,7 +213,7 @@ const TAB_COLUMNS: Record<TabId, ColDef[]> = {
     { key: 'Status',         label: 'Status', type: 'status', options: ['Pending', 'Submitted', 'Won', 'Lost'] },
     { key: 'Bid Due Date',   label: 'Bid Due', type: 'date' },
     { key: 'Date Submitted', label: 'Submitted', type: 'date' },
-    { key: 'PDF URL',        label: 'PDF' },
+    { key: 'PDF URL',        label: 'PDF', type: 'url' },
     { key: 'Notes',          label: 'Notes' },
   ],
   gov_contracts: [
@@ -360,6 +358,11 @@ function ReadCell({ col, value, record, compact = true, onOpenDetail, highlight 
     const url = extractFromNotes(record?.[src], col.notesKey ?? col.label)
     if (url === '—' || url.toLowerCase().includes('not uploaded')) return <span className="text-gray-300">—</span>
     return <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline text-xs font-medium">View Document</a>
+  }
+  if (col.type === 'url') {
+    const url = typeof value === 'string' ? value : ''
+    if (!url) return <span className="text-gray-300">—</span>
+    return <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline text-xs font-medium">View PDF</a>
   }
   if (value == null || value === '') return <span className="text-gray-300">—</span>
   if (col.type === 'status') return <StatusBadge value={String(value)} />
